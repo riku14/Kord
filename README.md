@@ -1,6 +1,6 @@
-# ⚡ QuickBar - Command Palette for Chrome
+# ⚡ Kord - Command Palette for Chrome
 
-A powerful command palette for Chrome that brings Arc Browser-like search experience to your workflow.
+A powerful command palette for Chrome that brings Arc Browser-like search experience to your workflow. Beautiful UI with professional icons, smooth animations, and intuitive UX.
 
 ## 🎯 Features
 
@@ -10,6 +10,9 @@ A powerful command palette for Chrome that brings Arc Browser-like search experi
 - **⌨️ Browser Commands**: Execute browser actions with keyboard shortcuts
 - **🎯 Frecency-based Ranking**: Results ranked by frequency and recency of use
 - **🌓 Dark/Light Mode**: Automatically adapts to your system theme
+- **🎨 Arc-Inspired Design**: Beautiful, polished UI with smooth animations
+- **🎭 Professional Icons**: Lucide React icons for each command and action
+- **✨ Smooth Animations**: Delightful fade-in effects and hover interactions
 
 ## 🚀 Quick Start
 
@@ -17,8 +20,8 @@ A powerful command palette for Chrome that brings Arc Browser-like search experi
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/riku14/QuickBar.git
-   cd quickbar
+   git clone https://github.com/riku14/Kord.git
+   cd kord
    ```
 
 2. Install dependencies:
@@ -38,14 +41,14 @@ _Coming soon..._
 
 ## 🎮 Usage
 
-### Opening QuickBar
+### Opening Kord
 
 - **Windows/Linux**: `Ctrl+K`
 - **Mac**: `Cmd+K`
 
 You can customize this shortcut in Chrome:
 1. Go to `chrome://extensions/shortcuts`
-2. Find "QuickBar"
+2. Find "Kord"
 3. Set your preferred keyboard shortcut
 
 ### Searching
@@ -59,39 +62,69 @@ You can customize this shortcut in Chrome:
 
 - `↑↓` or `Arrow Keys`: Navigate through results
 - `Enter`: Execute selected result
-- `Esc`: Close QuickBar
+- `Esc`: Close Kord
 
 ## 🛠️ Browser Commands
 
-QuickBar includes these built-in commands:
+Kord includes these built-in commands with dedicated icons:
 
-| Command | Description |
-|---------|-------------|
-| New Tab | Open a new tab |
-| Close Tab | Close the current tab |
-| Close Other Tabs | Close all other tabs (except pinned) |
-| Duplicate Tab | Duplicate the current tab |
-| Pin/Unpin Tab | Toggle pin on the current tab |
-| Mute/Unmute Tab | Toggle mute on the current tab |
-| Clear Cache | Clear browser cache |
-| Open Downloads | Go to downloads page |
-| Open Extensions | Go to extensions page |
-| Open Settings | Go to Chrome settings |
-| Open History Page | Go to history page |
-| Open Bookmark Manager | Go to bookmark manager |
+| Icon | Command | Description | Shortcut |
+|------|---------|-------------|----------|
+| ➕ | New Tab | Open a new tab | - |
+| ✕ | Close Tab | Close the current tab | - |
+| ⊗ | Close Other Tabs | Close all other tabs (except pinned) | - |
+| 📋 | Duplicate Tab | Duplicate the current tab | - |
+| 📌 | Pin/Unpin Tab | Toggle pin on the current tab | - |
+| 🔊 | Mute/Unmute Tab | Toggle mute on the current tab | - |
+| ← | Go Back | Navigate to the previous page | Alt+Left |
+| → | Go Forward | Navigate to the next page | Alt+Right |
+| ↻ | Reload Tab | Reload the current tab | Ctrl+R |
+| ⟲ | Recently Closed Tabs | Restore recently closed tabs | - |
+| 🔖 | Add Bookmark | Bookmark the current tab | - |
+| 🗑️ | Clear Cache | Clear browser cache | - |
+| ⬇️ | Open Downloads | Go to downloads page | - |
+| 🧩 | Open Extensions | Go to extensions page | - |
+| ⚙️ | Open Settings | Go to Chrome settings | - |
+| 📜 | Open History Page | Go to history page | - |
+| 📚 | Open Bookmark Manager | Go to bookmark manager | - |
 
 ## 🏗️ Tech Stack
 
 - **Framework**: [WXT](https://wxt.dev/) - Modern Chrome Extension Framework
-- **UI**: React 18 + TypeScript
-- **Styling**: Custom CSS (Arc Browser-inspired design)
+- **UI**: React 19 + TypeScript
+- **Icons**: [Lucide React](https://lucide.dev/) - Beautiful & consistent icon set
+- **Styling**: Custom CSS with Arc Browser-inspired design
 - **Build**: Vite (via WXT)
 - **Manifest**: V3
+
+## 🎨 Design System
+
+Kord features a carefully crafted design system inspired by Arc Browser:
+
+### Color Palette
+
+- **Light Mode**: Clean whites, subtle grays, blue-to-purple gradients
+- **Dark Mode**: Deep navy background with refined purple-blue accents
+- **Gradients**: Dynamic blue (#3b82f6) to purple (#8b5cf6) transitions
+
+### Visual Elements
+
+- **Icons**: 42px icon boxes with gradient backgrounds on selection
+- **Badges**: Color-coded by type (Tab, Bookmark, History, Command, etc.)
+- **Animations**: Staggered fade-in effects with 0.02s delays per item
+- **Hover Effects**: Smooth scale transforms and color transitions
+- **Shadows**: Multi-layered shadows for depth and elevation
+
+### Typography
+
+- **Primary Font**: System font stack (-apple-system, BlinkMacSystemFont, etc.)
+- **Font Smoothing**: Antialiased for crisp rendering
+- **Letter Spacing**: Carefully tuned for optimal readability
 
 ## 📁 Project Structure
 
 ```
-quickbar/
+kord/
 ├── entrypoints/
 │   ├── background.ts          # Service Worker
 │   ├── content.ts             # Content Script (palette injection)

@@ -1,6 +1,6 @@
 {
-  "name": "quickbar",
-  "description": "A powerful command palette for Chrome. Search tabs, bookmarks, history, and execute browser commands instantly.",
+  "name": "kord",
+  "description": "Lightning-fast command palette for Chrome. Search tabs, bookmarks, history instantly with Arc Browser-inspired design and frecency ranking.",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -15,6 +15,7 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "lucide-react": "^0.564.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

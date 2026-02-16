@@ -1,0 +1,191 @@
+{
+  "extName": {
+    "message": "Kord - Command Palette & Tab Manager for Chrome"
+  },
+  "extDescription": {
+    "message": "Arc 브라우저에서 영감을 받은 초고속 명령 팔레트. 탭, 북마크, 기록을 즉시 검색하고 빈도 기반 순위 제공."
+  },
+  "searchPlaceholder": {
+    "message": "탭, 북마크, 기록 검색..."
+  },
+  "commandPlaceholder": {
+    "message": "명령 검색..."
+  },
+  "noResults": {
+    "message": "결과를 찾을 수 없습니다"
+  },
+  "googleSearch": {
+    "message": "Google 검색:"
+  },
+  "badgeTab": {
+    "message": "탭"
+  },
+  "badgeBookmark": {
+    "message": "북마크"
+  },
+  "badgeHistory": {
+    "message": "기록"
+  },
+  "badgeCommand": {
+    "message": "명령"
+  },
+  "badgeSession": {
+    "message": "세션"
+  },
+  "cmdNewTab": {
+    "message": "새 탭"
+  },
+  "cmdNewTabDesc": {
+    "message": "새 탭 열기"
+  },
+  "cmdCloseTab": {
+    "message": "탭 닫기"
+  },
+  "cmdCloseTabDesc": {
+    "message": "현재 탭 닫기"
+  },
+  "cmdCloseOtherTabs": {
+    "message": "다른 탭 닫기"
+  },
+  "cmdCloseOtherTabsDesc": {
+    "message": "다른 모든 탭 닫기 (고정 탭 제외)"
+  },
+  "cmdDuplicateTab": {
+    "message": "탭 복제"
+  },
+  "cmdDuplicateTabDesc": {
+    "message": "현재 탭 복제"
+  },
+  "cmdPinTab": {
+    "message": "탭 고정/고정 해제"
+  },
+  "cmdPinTabDesc": {
+    "message": "현재 탭의 고정 상태 전환"
+  },
+  "cmdMuteTab": {
+    "message": "탭 음소거/음소거 해제"
+  },
+  "cmdMuteTabDesc": {
+    "message": "현재 탭의 음소거 상태 전환"
+  },
+  "cmdGoBack": {
+    "message": "뒤로 가기"
+  },
+  "cmdGoBackDesc": {
+    "message": "이전 페이지로 이동"
+  },
+  "cmdGoForward": {
+    "message": "앞으로 가기"
+  },
+  "cmdGoForwardDesc": {
+    "message": "다음 페이지로 이동"
+  },
+  "cmdReloadTab": {
+    "message": "탭 새로고침"
+  },
+  "cmdReloadTabDesc": {
+    "message": "현재 탭 새로고침"
+  },
+  "cmdRecentlyClosed": {
+    "message": "최근 닫은 탭"
+  },
+  "cmdRecentlyClosedDesc": {
+    "message": "최근 닫은 탭 복원"
+  },
+  "cmdAddBookmark": {
+    "message": "북마크 추가"
+  },
+  "cmdAddBookmarkDesc": {
+    "message": "현재 탭을 북마크에 추가"
+  },
+  "cmdClearCache": {
+    "message": "캐시 지우기"
+  },
+  "cmdClearCacheDesc": {
+    "message": "브라우저 캐시 지우기"
+  },
+  "cmdOpenDownloads": {
+    "message": "다운로드 열기"
+  },
+  "cmdOpenDownloadsDesc": {
+    "message": "다운로드 페이지로 이동"
+  },
+  "cmdOpenExtensions": {
+    "message": "확장 프로그램 열기"
+  },
+  "cmdOpenExtensionsDesc": {
+    "message": "확장 프로그램 페이지로 이동"
+  },
+  "cmdOpenSettings": {
+    "message": "설정 열기"
+  },
+  "cmdOpenSettingsDesc": {
+    "message": "Chrome 설정으로 이동"
+  },
+  "cmdOpenHistory": {
+    "message": "기록 페이지 열기"
+  },
+  "cmdOpenHistoryDesc": {
+    "message": "기록 페이지로 이동"
+  },
+  "cmdOpenBookmarkManager": {
+    "message": "북마크 관리자 열기"
+  },
+  "cmdOpenBookmarkManagerDesc": {
+    "message": "북마크 관리자로 이동"
+  },
+  "popupTitle": {
+    "message": "Kord"
+  },
+  "popupSubtitle": {
+    "message": "Chrome용 초고속 명령 팔레트"
+  },
+  "popupOpenKord": {
+    "message": "으로 Kord 열기"
+  },
+  "popupDescription": {
+    "message": "탭, 북마크, 기록을 검색하고 브라우저 명령을 즉시 실행하세요."
+  },
+  "popupFeaturesTitle": {
+    "message": "기능:"
+  },
+  "popupFeature1": {
+    "message": "빠른 탭 전환"
+  },
+  "popupFeature2": {
+    "message": "북마크 검색"
+  },
+  "popupFeature3": {
+    "message": "기록 검색"
+  },
+  "popupFeature4": {
+    "message": "브라우저 명령"
+  },
+  "popupFeature5": {
+    "message": "빈도 기반 순위"
+  },
+  "popupFooter": {
+    "message": "Arc 브라우저에서 영감을 받음"
+  },
+  "statsUsed": {
+    "message": "사용 횟수"
+  },
+  "statsTimes": {
+    "message": "회"
+  },
+  "statsDays": {
+    "message": "활성 일수"
+  },
+  "reviewBannerTitle": {
+    "message": "Kord를 즐기고 계신가요?"
+  },
+  "reviewBannerMessage": {
+    "message": "성장에 도움을 주세요! 간단한 5성 리뷰가 큰 도움이 됩니다."
+  },
+  "reviewBannerReview": {
+    "message": "평가하기 ⭐"
+  },
+  "reviewBannerDismiss": {
+    "message": "나중에"
+  }
+}

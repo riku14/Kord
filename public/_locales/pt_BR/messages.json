@@ -1,0 +1,191 @@
+{
+  "extName": {
+    "message": "Kord - Command Palette & Tab Manager for Chrome"
+  },
+  "extDescription": {
+    "message": "Paleta de comandos ultrarrápida para Chrome. Busque abas, favoritos, histórico instantaneamente com design inspirado no Arc Browser e classificação por frequência."
+  },
+  "searchPlaceholder": {
+    "message": "Buscar abas, favoritos, histórico..."
+  },
+  "commandPlaceholder": {
+    "message": "Buscar comandos..."
+  },
+  "noResults": {
+    "message": "Nenhum resultado encontrado"
+  },
+  "googleSearch": {
+    "message": "Buscar no Google:"
+  },
+  "badgeTab": {
+    "message": "ABA"
+  },
+  "badgeBookmark": {
+    "message": "FAVORITO"
+  },
+  "badgeHistory": {
+    "message": "HISTÓRICO"
+  },
+  "badgeCommand": {
+    "message": "COMANDO"
+  },
+  "badgeSession": {
+    "message": "SESSÃO"
+  },
+  "cmdNewTab": {
+    "message": "Nova Aba"
+  },
+  "cmdNewTabDesc": {
+    "message": "Abrir uma nova aba"
+  },
+  "cmdCloseTab": {
+    "message": "Fechar Aba"
+  },
+  "cmdCloseTabDesc": {
+    "message": "Fechar a aba atual"
+  },
+  "cmdCloseOtherTabs": {
+    "message": "Fechar Outras Abas"
+  },
+  "cmdCloseOtherTabsDesc": {
+    "message": "Fechar todas as outras abas (exceto fixadas)"
+  },
+  "cmdDuplicateTab": {
+    "message": "Duplicar Aba"
+  },
+  "cmdDuplicateTabDesc": {
+    "message": "Duplicar a aba atual"
+  },
+  "cmdPinTab": {
+    "message": "Fixar/Desfixar Aba"
+  },
+  "cmdPinTabDesc": {
+    "message": "Alternar fixação da aba atual"
+  },
+  "cmdMuteTab": {
+    "message": "Silenciar/Reativar Aba"
+  },
+  "cmdMuteTabDesc": {
+    "message": "Alternar silenciamento da aba atual"
+  },
+  "cmdGoBack": {
+    "message": "Voltar"
+  },
+  "cmdGoBackDesc": {
+    "message": "Navegar para a página anterior"
+  },
+  "cmdGoForward": {
+    "message": "Avançar"
+  },
+  "cmdGoForwardDesc": {
+    "message": "Navegar para a próxima página"
+  },
+  "cmdReloadTab": {
+    "message": "Recarregar Aba"
+  },
+  "cmdReloadTabDesc": {
+    "message": "Recarregar a aba atual"
+  },
+  "cmdRecentlyClosed": {
+    "message": "Abas Fechadas Recentemente"
+  },
+  "cmdRecentlyClosedDesc": {
+    "message": "Restaurar abas fechadas recentemente"
+  },
+  "cmdAddBookmark": {
+    "message": "Adicionar Favorito"
+  },
+  "cmdAddBookmarkDesc": {
+    "message": "Adicionar a aba atual aos favoritos"
+  },
+  "cmdClearCache": {
+    "message": "Limpar Cache"
+  },
+  "cmdClearCacheDesc": {
+    "message": "Limpar cache do navegador"
+  },
+  "cmdOpenDownloads": {
+    "message": "Abrir Downloads"
+  },
+  "cmdOpenDownloadsDesc": {
+    "message": "Ir para a página de downloads"
+  },
+  "cmdOpenExtensions": {
+    "message": "Abrir Extensões"
+  },
+  "cmdOpenExtensionsDesc": {
+    "message": "Ir para a página de extensões"
+  },
+  "cmdOpenSettings": {
+    "message": "Abrir Configurações"
+  },
+  "cmdOpenSettingsDesc": {
+    "message": "Ir para as configurações do Chrome"
+  },
+  "cmdOpenHistory": {
+    "message": "Abrir Página de Histórico"
+  },
+  "cmdOpenHistoryDesc": {
+    "message": "Ir para a página de histórico"
+  },
+  "cmdOpenBookmarkManager": {
+    "message": "Abrir Gerenciador de Favoritos"
+  },
+  "cmdOpenBookmarkManagerDesc": {
+    "message": "Ir para o gerenciador de favoritos"
+  },
+  "popupTitle": {
+    "message": "Kord"
+  },
+  "popupSubtitle": {
+    "message": "Paleta de comandos ultrarrápida para Chrome"
+  },
+  "popupOpenKord": {
+    "message": "para abrir o Kord"
+  },
+  "popupDescription": {
+    "message": "Busque abas, favoritos, histórico e execute comandos do navegador instantaneamente."
+  },
+  "popupFeaturesTitle": {
+    "message": "Recursos:"
+  },
+  "popupFeature1": {
+    "message": "Troca rápida de abas"
+  },
+  "popupFeature2": {
+    "message": "Busca de favoritos"
+  },
+  "popupFeature3": {
+    "message": "Busca de histórico"
+  },
+  "popupFeature4": {
+    "message": "Comandos do navegador"
+  },
+  "popupFeature5": {
+    "message": "Classificação por frequência"
+  },
+  "popupFooter": {
+    "message": "Inspirado no Arc Browser"
+  },
+  "statsUsed": {
+    "message": "Usado"
+  },
+  "statsTimes": {
+    "message": "vezes"
+  },
+  "statsDays": {
+    "message": "Dias ativos"
+  },
+  "reviewBannerTitle": {
+    "message": "Gostando do Kord?"
+  },
+  "reviewBannerMessage": {
+    "message": "Ajude-nos a crescer! Uma avaliação rápida de 5 estrelas seria incrível."
+  },
+  "reviewBannerReview": {
+    "message": "Avaliar ⭐"
+  },
+  "reviewBannerDismiss": {
+    "message": "Talvez mais tarde"
+  }
+}

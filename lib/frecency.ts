@@ -13,10 +13,10 @@ interface FrecencyData {
   [id: string]: UsageRecord;
 }
 
-const STORAGE_KEY = 'quickbar_frecency';
+const STORAGE_KEY = 'kord_frecency';
 const MAX_AGE_DAYS = 90;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24時間
-const CLEANUP_TIMESTAMP_KEY = 'quickbar_frecency_last_cleanup';
+const CLEANUP_TIMESTAMP_KEY = 'kord_frecency_last_cleanup';
 
 /**
  * 古いデータをクリーンアップ
@@ -38,7 +38,7 @@ async function cleanupOldRecords(data: FrecencyData): Promise<FrecencyData> {
   }
 
   if (removedCount > 0) {
-    console.log(`QuickBar: Cleaned up ${removedCount} old frecency records`);
+    console.log(`Kord: Cleaned up ${removedCount} old frecency records`);
   }
 
   return cleaned;

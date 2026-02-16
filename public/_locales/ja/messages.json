@@ -1,0 +1,191 @@
+{
+  "extName": {
+    "message": "Kord - Command Palette & Tab Manager for Chrome"
+  },
+  "extDescription": {
+    "message": "Arc Browserからインスピレーション。超高速でタブ、ブックマーク、履歴を検索。Frecencyランキング搭載のコマンドパレット。"
+  },
+  "searchPlaceholder": {
+    "message": "タブ、ブックマーク、履歴を検索..."
+  },
+  "commandPlaceholder": {
+    "message": "コマンドを検索..."
+  },
+  "noResults": {
+    "message": "結果が見つかりません"
+  },
+  "googleSearch": {
+    "message": "Google検索:"
+  },
+  "badgeTab": {
+    "message": "タブ"
+  },
+  "badgeBookmark": {
+    "message": "ブックマーク"
+  },
+  "badgeHistory": {
+    "message": "履歴"
+  },
+  "badgeCommand": {
+    "message": "コマンド"
+  },
+  "badgeSession": {
+    "message": "セッション"
+  },
+  "cmdNewTab": {
+    "message": "新しいタブ"
+  },
+  "cmdNewTabDesc": {
+    "message": "新しいタブを開く"
+  },
+  "cmdCloseTab": {
+    "message": "タブを閉じる"
+  },
+  "cmdCloseTabDesc": {
+    "message": "現在のタブを閉じる"
+  },
+  "cmdCloseOtherTabs": {
+    "message": "他のタブを閉じる"
+  },
+  "cmdCloseOtherTabsDesc": {
+    "message": "他のすべてのタブを閉じる（ピン留めを除く）"
+  },
+  "cmdDuplicateTab": {
+    "message": "タブを複製"
+  },
+  "cmdDuplicateTabDesc": {
+    "message": "現在のタブを複製する"
+  },
+  "cmdPinTab": {
+    "message": "タブをピン留め/解除"
+  },
+  "cmdPinTabDesc": {
+    "message": "現在のタブのピン留めを切り替える"
+  },
+  "cmdMuteTab": {
+    "message": "タブをミュート/解除"
+  },
+  "cmdMuteTabDesc": {
+    "message": "現在のタブのミュートを切り替える"
+  },
+  "cmdGoBack": {
+    "message": "戻る"
+  },
+  "cmdGoBackDesc": {
+    "message": "前のページに戻る"
+  },
+  "cmdGoForward": {
+    "message": "進む"
+  },
+  "cmdGoForwardDesc": {
+    "message": "次のページに進む"
+  },
+  "cmdReloadTab": {
+    "message": "タブを再読み込み"
+  },
+  "cmdReloadTabDesc": {
+    "message": "現在のタブを再読み込みする"
+  },
+  "cmdRecentlyClosed": {
+    "message": "最近閉じたタブ"
+  },
+  "cmdRecentlyClosedDesc": {
+    "message": "最近閉じたタブを復元する"
+  },
+  "cmdAddBookmark": {
+    "message": "ブックマークに追加"
+  },
+  "cmdAddBookmarkDesc": {
+    "message": "現在のタブをブックマークする"
+  },
+  "cmdClearCache": {
+    "message": "キャッシュをクリア"
+  },
+  "cmdClearCacheDesc": {
+    "message": "ブラウザのキャッシュをクリアする"
+  },
+  "cmdOpenDownloads": {
+    "message": "ダウンロードを開く"
+  },
+  "cmdOpenDownloadsDesc": {
+    "message": "ダウンロードページを開く"
+  },
+  "cmdOpenExtensions": {
+    "message": "拡張機能を開く"
+  },
+  "cmdOpenExtensionsDesc": {
+    "message": "拡張機能ページを開く"
+  },
+  "cmdOpenSettings": {
+    "message": "設定を開く"
+  },
+  "cmdOpenSettingsDesc": {
+    "message": "Chrome設定を開く"
+  },
+  "cmdOpenHistory": {
+    "message": "履歴ページを開く"
+  },
+  "cmdOpenHistoryDesc": {
+    "message": "履歴ページを開く"
+  },
+  "cmdOpenBookmarkManager": {
+    "message": "ブックマークマネージャーを開く"
+  },
+  "cmdOpenBookmarkManagerDesc": {
+    "message": "ブックマークマネージャーを開く"
+  },
+  "popupTitle": {
+    "message": "Kord"
+  },
+  "popupSubtitle": {
+    "message": "Chrome用の超高速コマンドパレット"
+  },
+  "popupOpenKord": {
+    "message": "でKordを開く"
+  },
+  "popupDescription": {
+    "message": "タブ、ブックマーク、履歴を検索し、ブラウザコマンドを瞬時に実行できます。"
+  },
+  "popupFeaturesTitle": {
+    "message": "機能:"
+  },
+  "popupFeature1": {
+    "message": "高速タブ切り替え"
+  },
+  "popupFeature2": {
+    "message": "ブックマーク検索"
+  },
+  "popupFeature3": {
+    "message": "履歴検索"
+  },
+  "popupFeature4": {
+    "message": "ブラウザコマンド"
+  },
+  "popupFeature5": {
+    "message": "Frecencyランキング"
+  },
+  "popupFooter": {
+    "message": "Arc Browserからインスピレーション"
+  },
+  "statsUsed": {
+    "message": "使用回数"
+  },
+  "statsTimes": {
+    "message": "回"
+  },
+  "statsDays": {
+    "message": "アクティブ日数"
+  },
+  "reviewBannerTitle": {
+    "message": "Kordを気に入っていただけましたか？"
+  },
+  "reviewBannerMessage": {
+    "message": "拡張機能の成長にご協力ください！5つ星レビューをいただけると嬉しいです。"
+  },
+  "reviewBannerReview": {
+    "message": "レビューする ⭐"
+  },
+  "reviewBannerDismiss": {
+    "message": "後で"
+  }
+}

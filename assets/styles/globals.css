@@ -6,25 +6,31 @@
 :root {
   --qb-bg: #ffffff;
   --qb-input: #f8f9fa;
-  --qb-border: #e0e4e8;
-  --qb-text: #1a1d23;
-  --qb-muted: #6e7681;
+  --qb-border: #e5e7eb;
+  --qb-text: #111827;
+  --qb-muted: #6b7280;
   --qb-accent: #3b82f6;
-  --qb-hover: #f3f4f6;
+  --qb-hover: #f9fafb;
   --qb-selected: #eff6ff;
+  --qb-icon-bg: #f3f4f6;
+  --qb-gradient-start: #3b82f6;
+  --qb-gradient-end: #8b5cf6;
 }
 
 /* Arc風カラーパレット（Dark Mode） */
 @media (prefers-color-scheme: dark) {
   :root {
-    --qb-bg: #1c1e26;
-    --qb-input: #24273a;
-    --qb-border: #363a4f;
+    --qb-bg: #1a1d2e;
+    --qb-input: #22253a;
+    --qb-border: #2d3250;
     --qb-text: #e4e6eb;
-    --qb-muted: #8087a2;
-    --qb-accent: #7aa2f7;
-    --qb-hover: #282c3c;
-    --qb-selected: #2d3548;
+    --qb-muted: #9ca3af;
+    --qb-accent: #60a5fa;
+    --qb-hover: #252841;
+    --qb-selected: #2d3250;
+    --qb-icon-bg: #2d3250;
+    --qb-gradient-start: #60a5fa;
+    --qb-gradient-end: #a78bfa;
   }
 }
 

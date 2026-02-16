@@ -14,6 +14,7 @@ export interface SearchResult {
   // コマンド用
   action?: string;
   shortcut?: string;
+  icon?: string;
   // セッション用
   sessionId?: string;
 }

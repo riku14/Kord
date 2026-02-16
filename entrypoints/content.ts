@@ -3,7 +3,7 @@ import { isValidMessageOrigin } from '../lib/security';
 export default defineContentScript({
   matches: ['<all_urls>'],
   main() {
-    console.log('QuickBar content script loaded');
+    console.log('Kord content script loaded');
 
     let paletteRoot: HTMLDivElement | null = null;
     let isVisible = false;
@@ -50,7 +50,7 @@ export default defineContentScript({
 
       // ルート要素を作成
       paletteRoot = document.createElement('div');
-      paletteRoot.id = 'quickbar-root';
+      paletteRoot.id = 'kord-root';
       paletteRoot.style.cssText = `
         position: fixed;
         top: 0;
@@ -198,7 +198,7 @@ export default defineContentScript({
     function handlePaletteMessage(e: MessageEvent) {
       // Origin検証を追加
       if (!isValidMessageOrigin(e.origin)) {
-        console.warn('QuickBar: Rejected message from untrusted origin:', e.origin);
+        console.warn('Kord: Rejected message from untrusted origin:', e.origin);
         return;
       }
 

@@ -1,8 +1,12 @@
 import type { MessageAction } from '../lib/types';
 import { isSafeUrl } from '../lib/security';
+import { runMigrations } from '../lib/migration';
 
 export default defineBackground(() => {
-  console.log('QuickBar background service worker started');
+  console.log('Kord background service worker started');
+
+  // データ移行を実行（初回のみ）
+  runMigrations();
 
   // Ctrl+K / Cmd+K コマンドのリスナー
   browser.commands.onCommand.addListener(async (command) => {

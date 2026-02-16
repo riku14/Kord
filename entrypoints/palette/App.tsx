@@ -1,49 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  Search,
+  Zap,
+  LayoutGrid,
+  Bookmark,
+  History,
+  RotateCcw,
+  Plus,
+  X,
+  XCircle,
+  Copy,
+  Pin,
+  Volume2,
+  ArrowLeft,
+  ArrowRight,
+  RefreshCw,
+  Trash2,
+  Download,
+  Puzzle,
+  Settings,
+  BookMarked,
+  ChevronRight,
+  type LucideIcon
+} from 'lucide-react';
 import { fuzzyMatchMultiple } from '../../lib/fuzzy';
 import { recordUsage, getFrecencyData, calculateFrecencyScore } from '../../lib/frecency';
 import { COMMANDS } from '../../lib/constants';
 import type { SearchResult, ResultType } from '../../lib/types';
 import { getExtensionOrigin, isSafeUrl } from '../../lib/security';
+import { t } from '../../lib/i18n';
+import { recordAction } from '../../lib/analytics';
 
-// SVGアイコンコンポーネント
-const SearchIcon = ({ size = 20, color = 'white' }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.35-4.35" />
-  </svg>
-);
-
-const CommandIcon = ({ size = 20, color = 'white' }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-  </svg>
-);
-
-const TabIcon = ({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-  </svg>
-);
-
-const BookmarkIcon = ({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-  </svg>
-);
-
-const HistoryIcon = ({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-);
-
-const SessionIcon = ({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="1 4 1 10 7 10" />
-    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-  </svg>
-);
+// アイコンマッピング
+const ICON_MAP: Record<string, LucideIcon> = {
+  Plus,
+  X,
+  XCircle,
+  Copy,
+  Pin,
+  Volume2,
+  ArrowLeft,
+  ArrowRight,
+  RefreshCw,
+  RotateCcw,
+  Bookmark,
+  Trash2,
+  Download,
+  Puzzle,
+  Settings,
+  History,
+  BookMarked,
+};
 
 function App() {
   const [query, setQuery] = useState('');
@@ -224,6 +231,7 @@ function App() {
           subtitle: cmd.subtitle,
           action: cmd.action,
           url: cmd.url,
+          icon: cmd.icon,
           score: 0,
         }));
       } else {
@@ -277,7 +285,7 @@ function App() {
             windowId: tab.windowId,
           };
         })
-        .filter((r) => r.score > 0);
+        .filter((r) => r.score > 0.3); // スコア閾値を設定（Arc風）
 
       const historyResults: SearchResult[] = history
         .map((h: any) => {
@@ -291,7 +299,7 @@ function App() {
             score: fuzzyScore,
           };
         })
-        .filter((r) => r.score > 0);
+        .filter((r) => r.score > 0.3); // スコア閾値を設定
 
       allResults = [...tabResults, ...historyResults].sort(
         (a, b) => b.score - a.score
@@ -301,7 +309,7 @@ function App() {
       const googleSearchResult: SearchResult = {
         id: 'google-search',
         type: 'search' as ResultType,
-        title: `Google で "${trimmedQuery}" を検索`,
+        title: `${t('googleSearch')} "${trimmedQuery}"`,
         subtitle: `https://www.google.com/search?q=${encodeURIComponent(trimmedQuery)}`,
         url: `https://www.google.com/search?q=${encodeURIComponent(trimmedQuery)}`,
         score: -1, // 常に最下部に表示
@@ -323,6 +331,7 @@ function App() {
         subtitle: cmd.subtitle,
         action: cmd.action,
         url: cmd.url,
+        icon: cmd.icon,
         score: fuzzyScore,
       };
     }).filter((r) => r.score > 0);
@@ -352,14 +361,28 @@ function App() {
               tabId: result.tabId,
               windowId: result.windowId,
             });
+            await recordAction('tabSwitch');
           }
           break;
 
         case 'bookmark':
+          if (result.url) {
+            await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
+            await recordAction('bookmarkOpen');
+          }
+          break;
+
         case 'history':
+          if (result.url) {
+            await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
+            await recordAction('historyOpen');
+          }
+          break;
+
         case 'search':
           if (result.url) {
             await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
+            await recordAction('searchGoogle');
           }
           break;
 
@@ -374,6 +397,7 @@ function App() {
 
         case 'command':
           await executeCommand(result);
+          await recordAction('commandExecute');
           break;
       }
 
@@ -468,6 +492,7 @@ function App() {
             title: s.tab?.title || s.window?.tabs?.[0]?.title || 'Untitled',
             subtitle: s.tab?.url || `${s.window?.tabs?.length || 0} tabs`,
             sessionId: s.sessionId,
+            icon: 'RotateCcw',
             score: 0,
           }));
           setResults(sessionResults.slice(0, 12));
@@ -497,6 +522,13 @@ function App() {
 
   const closePalette = () => {
     try {
+      // 状態をリセット
+      setQuery('');
+      setResults([]);
+      setSelectedIndex(0);
+      setMode('search');
+      setError(null);
+
       // 拡張機能のオリジンを明示的に指定
       window.parent.postMessage(
         { type: 'CLOSE_PALETTE' },
@@ -507,38 +539,47 @@ function App() {
     }
   };
 
-  const getTypeIcon = (type: ResultType): React.ReactNode => {
-    const iconColor = 'var(--qb-muted)';
+  const getTypeIcon = (type: ResultType, iconName?: string): React.ReactNode => {
+    const iconSize = 20;
+    const iconStrokeWidth = 2;
+
+    // コマンドタイプの場合、カスタムアイコンを使用
+    if (type === 'command' && iconName && ICON_MAP[iconName]) {
+      const IconComponent = ICON_MAP[iconName];
+      return <IconComponent size={iconSize} strokeWidth={iconStrokeWidth} />;
+    }
+
+    // デフォルトアイコン
     switch (type) {
       case 'tab':
-        return <TabIcon size={20} color={iconColor} />;
+        return <LayoutGrid size={iconSize} strokeWidth={iconStrokeWidth} />;
       case 'bookmark':
-        return <BookmarkIcon size={20} color={iconColor} />;
+        return <Bookmark size={iconSize} strokeWidth={iconStrokeWidth} />;
       case 'history':
-        return <HistoryIcon size={20} color={iconColor} />;
+        return <History size={iconSize} strokeWidth={iconStrokeWidth} />;
       case 'command':
-        return <CommandIcon size={20} color={iconColor} />;
+        return <Zap size={iconSize} strokeWidth={iconStrokeWidth} />;
       case 'search':
-        return <SearchIcon size={20} color={iconColor} />;
+        return <Search size={iconSize} strokeWidth={iconStrokeWidth} />;
       case 'session':
-        return <SessionIcon size={20} color={iconColor} />;
+        return <RotateCcw size={iconSize} strokeWidth={iconStrokeWidth} />;
     }
   };
 
-  const getBadgeClass = (type: ResultType): string => {
+  const getActionText = (type: ResultType): string => {
     switch (type) {
       case 'tab':
-        return 'badge-tab';
+        return 'Switch to Tab';
       case 'bookmark':
-        return 'badge-bookmark';
+        return 'Open';
       case 'history':
-        return 'badge-history';
+        return 'Open in New Tab';
       case 'command':
-        return 'badge-command';
+        return '';  // コマンドはショートカットキーを表示
       case 'search':
-        return 'badge-search';
+        return 'Search Google';
       case 'session':
-        return 'badge-session';
+        return 'Restore Session';
     }
   };
 
@@ -546,20 +587,9 @@ function App() {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* エラー通知 */}
       {error && (
-        <div style={{
-          position: 'absolute',
-          top: '16px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#ff4444',
-          color: 'white',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontSize: '14px',
-          zIndex: 1000,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-        }}>
-          {error}
+        <div className="error-notification">
+          <div className="error-icon">⚠️</div>
+          <div className="error-message">{error}</div>
         </div>
       )}
 
@@ -567,14 +597,18 @@ function App() {
       <div className="search-container">
         <div className="search-wrapper">
           <div className="search-icon">
-            {mode === 'search' ? <SearchIcon size={18} /> : <CommandIcon size={18} />}
+            {mode === 'search' ? (
+              <Search size={18} strokeWidth={2.5} color="white" />
+            ) : (
+              <Zap size={18} strokeWidth={2.5} color="white" />
+            )}
           </div>
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={mode === 'search' ? 'Search tabs, history...' : 'Search commands...'}
+            placeholder={mode === 'search' ? t('searchPlaceholder') : t('commandPlaceholder')}
             className="search-input"
             autoComplete="off"
             spellCheck="false"
@@ -588,16 +622,20 @@ function App() {
         {results.length === 0 && query && (
           <div className="empty-state">
             <div className="empty-icon">
-              <SearchIcon size={32} />
+              <Search size={32} strokeWidth={2} color="white" />
             </div>
-            <p className="empty-title">No results found</p>
+            <p className="empty-title">{t('noResults')}</p>
           </div>
         )}
 
         {results.length === 0 && !query && (
           <div className="empty-state">
             <div className="empty-icon">
-              {mode === 'search' ? <SearchIcon size={32} /> : <CommandIcon size={32} />}
+              {mode === 'search' ? (
+                <Search size={32} strokeWidth={2} color="white" />
+              ) : (
+                <Zap size={32} strokeWidth={2} color="white" />
+              )}
             </div>
             <p className="empty-title">{mode === 'search' ? 'Search Mode' : 'Command Mode'}</p>
             <p className="empty-subtitle">
@@ -628,7 +666,7 @@ function App() {
                   }}
                 />
               ) : (
-                getTypeIcon(result.type)
+                getTypeIcon(result.type, result.icon)
               )}
             </div>
 
@@ -637,9 +675,14 @@ function App() {
               {result.subtitle && <div className="result-subtitle">{result.subtitle}</div>}
             </div>
 
-            <div className={`result-badge ${getBadgeClass(result.type)}`}>
-              {result.type.toUpperCase()}
-            </div>
+            {result.type === 'command' && result.shortcut ? (
+              <kbd className="result-shortcut">{result.shortcut}</kbd>
+            ) : (
+              <div className="result-action">
+                <span className="result-action-text">{getActionText(result.type)}</span>
+                <ChevronRight size={16} strokeWidth={2} className="result-action-icon" />
+              </div>
+            )}
           </div>
         ))}
       </div>

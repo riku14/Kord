@@ -1,0 +1,191 @@
+{
+  "extName": {
+    "message": "Kord - Command Palette & Tab Manager for Chrome"
+  },
+  "extDescription": {
+    "message": "Lightning-fast command palette for Chrome. Search tabs, bookmarks, history instantly with Arc Browser-inspired design and frecency ranking."
+  },
+  "searchPlaceholder": {
+    "message": "Search tabs, bookmarks, history..."
+  },
+  "commandPlaceholder": {
+    "message": "Search commands..."
+  },
+  "noResults": {
+    "message": "No results found"
+  },
+  "googleSearch": {
+    "message": "Search Google for"
+  },
+  "badgeTab": {
+    "message": "TAB"
+  },
+  "badgeBookmark": {
+    "message": "BOOKMARK"
+  },
+  "badgeHistory": {
+    "message": "HISTORY"
+  },
+  "badgeCommand": {
+    "message": "COMMAND"
+  },
+  "badgeSession": {
+    "message": "SESSION"
+  },
+  "cmdNewTab": {
+    "message": "New Tab"
+  },
+  "cmdNewTabDesc": {
+    "message": "Open a new tab"
+  },
+  "cmdCloseTab": {
+    "message": "Close Tab"
+  },
+  "cmdCloseTabDesc": {
+    "message": "Close the current tab"
+  },
+  "cmdCloseOtherTabs": {
+    "message": "Close Other Tabs"
+  },
+  "cmdCloseOtherTabsDesc": {
+    "message": "Close all other tabs (except pinned)"
+  },
+  "cmdDuplicateTab": {
+    "message": "Duplicate Tab"
+  },
+  "cmdDuplicateTabDesc": {
+    "message": "Duplicate the current tab"
+  },
+  "cmdPinTab": {
+    "message": "Pin/Unpin Tab"
+  },
+  "cmdPinTabDesc": {
+    "message": "Toggle pin on the current tab"
+  },
+  "cmdMuteTab": {
+    "message": "Mute/Unmute Tab"
+  },
+  "cmdMuteTabDesc": {
+    "message": "Toggle mute on the current tab"
+  },
+  "cmdGoBack": {
+    "message": "Go Back"
+  },
+  "cmdGoBackDesc": {
+    "message": "Navigate to the previous page"
+  },
+  "cmdGoForward": {
+    "message": "Go Forward"
+  },
+  "cmdGoForwardDesc": {
+    "message": "Navigate to the next page"
+  },
+  "cmdReloadTab": {
+    "message": "Reload Tab"
+  },
+  "cmdReloadTabDesc": {
+    "message": "Reload the current tab"
+  },
+  "cmdRecentlyClosed": {
+    "message": "Recently Closed Tabs"
+  },
+  "cmdRecentlyClosedDesc": {
+    "message": "Restore recently closed tabs"
+  },
+  "cmdAddBookmark": {
+    "message": "Add Bookmark"
+  },
+  "cmdAddBookmarkDesc": {
+    "message": "Bookmark the current tab"
+  },
+  "cmdClearCache": {
+    "message": "Clear Cache"
+  },
+  "cmdClearCacheDesc": {
+    "message": "Clear browser cache"
+  },
+  "cmdOpenDownloads": {
+    "message": "Open Downloads"
+  },
+  "cmdOpenDownloadsDesc": {
+    "message": "Go to downloads page"
+  },
+  "cmdOpenExtensions": {
+    "message": "Open Extensions"
+  },
+  "cmdOpenExtensionsDesc": {
+    "message": "Go to extensions page"
+  },
+  "cmdOpenSettings": {
+    "message": "Open Settings"
+  },
+  "cmdOpenSettingsDesc": {
+    "message": "Go to Chrome settings"
+  },
+  "cmdOpenHistory": {
+    "message": "Open History Page"
+  },
+  "cmdOpenHistoryDesc": {
+    "message": "Go to history page"
+  },
+  "cmdOpenBookmarkManager": {
+    "message": "Open Bookmark Manager"
+  },
+  "cmdOpenBookmarkManagerDesc": {
+    "message": "Go to bookmark manager"
+  },
+  "popupTitle": {
+    "message": "Kord"
+  },
+  "popupSubtitle": {
+    "message": "Lightning-fast command palette for Chrome"
+  },
+  "popupOpenKord": {
+    "message": "to open Kord"
+  },
+  "popupDescription": {
+    "message": "Search tabs, bookmarks, history, and execute browser commands instantly."
+  },
+  "popupFeaturesTitle": {
+    "message": "Features:"
+  },
+  "popupFeature1": {
+    "message": "Fast tab switching"
+  },
+  "popupFeature2": {
+    "message": "Bookmark search"
+  },
+  "popupFeature3": {
+    "message": "History search"
+  },
+  "popupFeature4": {
+    "message": "Browser commands"
+  },
+  "popupFeature5": {
+    "message": "Frecency-based ranking"
+  },
+  "popupFooter": {
+    "message": "Inspired by Arc Browser"
+  },
+  "statsUsed": {
+    "message": "Used"
+  },
+  "statsTimes": {
+    "message": "times"
+  },
+  "statsDays": {
+    "message": "Days active"
+  },
+  "reviewBannerTitle": {
+    "message": "Enjoying Kord?"
+  },
+  "reviewBannerMessage": {
+    "message": "Help us grow! A quick 5-star review would mean the world."
+  },
+  "reviewBannerReview": {
+    "message": "Rate Us ⭐"
+  },
+  "reviewBannerDismiss": {
+    "message": "Maybe Later"
+  }
+}

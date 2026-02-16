@@ -1,0 +1,191 @@
+{
+  "extName": {
+    "message": "Kord - Command Palette & Tab Manager for Chrome"
+  },
+  "extDescription": {
+    "message": "受Arc浏览器启发的超快速命令面板。即时搜索标签页、书签、历史记录，带有频率排名功能。"
+  },
+  "searchPlaceholder": {
+    "message": "搜索标签页、书签、历史记录..."
+  },
+  "commandPlaceholder": {
+    "message": "搜索命令..."
+  },
+  "noResults": {
+    "message": "未找到结果"
+  },
+  "googleSearch": {
+    "message": "Google搜索:"
+  },
+  "badgeTab": {
+    "message": "标签页"
+  },
+  "badgeBookmark": {
+    "message": "书签"
+  },
+  "badgeHistory": {
+    "message": "历史"
+  },
+  "badgeCommand": {
+    "message": "命令"
+  },
+  "badgeSession": {
+    "message": "会话"
+  },
+  "cmdNewTab": {
+    "message": "新建标签页"
+  },
+  "cmdNewTabDesc": {
+    "message": "打开新标签页"
+  },
+  "cmdCloseTab": {
+    "message": "关闭标签页"
+  },
+  "cmdCloseTabDesc": {
+    "message": "关闭当前标签页"
+  },
+  "cmdCloseOtherTabs": {
+    "message": "关闭其他标签页"
+  },
+  "cmdCloseOtherTabsDesc": {
+    "message": "关闭所有其他标签页（固定除外）"
+  },
+  "cmdDuplicateTab": {
+    "message": "复制标签页"
+  },
+  "cmdDuplicateTabDesc": {
+    "message": "复制当前标签页"
+  },
+  "cmdPinTab": {
+    "message": "固定/取消固定标签页"
+  },
+  "cmdPinTabDesc": {
+    "message": "切换当前标签页的固定状态"
+  },
+  "cmdMuteTab": {
+    "message": "静音/取消静音标签页"
+  },
+  "cmdMuteTabDesc": {
+    "message": "切换当前标签页的静音状态"
+  },
+  "cmdGoBack": {
+    "message": "后退"
+  },
+  "cmdGoBackDesc": {
+    "message": "导航到上一页"
+  },
+  "cmdGoForward": {
+    "message": "前进"
+  },
+  "cmdGoForwardDesc": {
+    "message": "导航到下一页"
+  },
+  "cmdReloadTab": {
+    "message": "重新加载标签页"
+  },
+  "cmdReloadTabDesc": {
+    "message": "重新加载当前标签页"
+  },
+  "cmdRecentlyClosed": {
+    "message": "最近关闭的标签页"
+  },
+  "cmdRecentlyClosedDesc": {
+    "message": "恢复最近关闭的标签页"
+  },
+  "cmdAddBookmark": {
+    "message": "添加书签"
+  },
+  "cmdAddBookmarkDesc": {
+    "message": "为当前标签页添加书签"
+  },
+  "cmdClearCache": {
+    "message": "清除缓存"
+  },
+  "cmdClearCacheDesc": {
+    "message": "清除浏览器缓存"
+  },
+  "cmdOpenDownloads": {
+    "message": "打开下载"
+  },
+  "cmdOpenDownloadsDesc": {
+    "message": "前往下载页面"
+  },
+  "cmdOpenExtensions": {
+    "message": "打开扩展程序"
+  },
+  "cmdOpenExtensionsDesc": {
+    "message": "前往扩展程序页面"
+  },
+  "cmdOpenSettings": {
+    "message": "打开设置"
+  },
+  "cmdOpenSettingsDesc": {
+    "message": "前往Chrome设置"
+  },
+  "cmdOpenHistory": {
+    "message": "打开历史记录页面"
+  },
+  "cmdOpenHistoryDesc": {
+    "message": "前往历史记录页面"
+  },
+  "cmdOpenBookmarkManager": {
+    "message": "打开书签管理器"
+  },
+  "cmdOpenBookmarkManagerDesc": {
+    "message": "前往书签管理器"
+  },
+  "popupTitle": {
+    "message": "Kord"
+  },
+  "popupSubtitle": {
+    "message": "Chrome的超快速命令面板"
+  },
+  "popupOpenKord": {
+    "message": "打开Kord"
+  },
+  "popupDescription": {
+    "message": "即时搜索标签页、书签、历史记录，执行浏览器命令。"
+  },
+  "popupFeaturesTitle": {
+    "message": "功能:"
+  },
+  "popupFeature1": {
+    "message": "快速切换标签页"
+  },
+  "popupFeature2": {
+    "message": "书签搜索"
+  },
+  "popupFeature3": {
+    "message": "历史搜索"
+  },
+  "popupFeature4": {
+    "message": "浏览器命令"
+  },
+  "popupFeature5": {
+    "message": "频率排名"
+  },
+  "popupFooter": {
+    "message": "受Arc浏览器启发"
+  },
+  "statsUsed": {
+    "message": "使用次数"
+  },
+  "statsTimes": {
+    "message": "次"
+  },
+  "statsDays": {
+    "message": "活跃天数"
+  },
+  "reviewBannerTitle": {
+    "message": "喜欢Kord吗？"
+  },
+  "reviewBannerMessage": {
+    "message": "帮助我们成长！快速的5星评价对我们意义重大。"
+  },
+  "reviewBannerReview": {
+    "message": "给我们评分 ⭐"
+  },
+  "reviewBannerDismiss": {
+    "message": "稍后"
+  }
+}
