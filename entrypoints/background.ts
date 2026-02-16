@@ -64,6 +64,24 @@ async function handleMessage(message: MessageAction, sender: browser.Runtime.Mes
     case 'NEW_TAB':
       return await newTab(message.url);
 
+    case 'GO_BACK':
+      return await goBack(message.tabId);
+
+    case 'GO_FORWARD':
+      return await goForward(message.tabId);
+
+    case 'RELOAD_TAB':
+      return await reloadTab(message.tabId, message.bypassCache);
+
+    case 'GET_RECENTLY_CLOSED':
+      return await getRecentlyClosed();
+
+    case 'RESTORE_SESSION':
+      return await restoreSession(message.sessionId);
+
+    case 'ADD_BOOKMARK':
+      return await addBookmark(message.title, message.url);
+
     case 'CLEAR_CACHE':
       return await clearCache();
 
@@ -199,5 +217,72 @@ async function newTab(url?: string) {
  */
 async function clearCache() {
   await browser.browsingData.removeCache({});
+  return { success: true };
+}
+
+/**
+ * タブの前のページに戻る
+ */
+async function goBack(tabId: number) {
+  try {
+    await browser.tabs.goBack(tabId);
+    return { success: true };
+  } catch (error) {
+    // 履歴がない場合はエラーを無視
+    return { success: false, error: 'No history available' };
+  }
+}
+
+/**
+ * タブの次のページに進む
+ */
+async function goForward(tabId: number) {
+  try {
+    await browser.tabs.goForward(tabId);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'No forward history available' };
+  }
+}
+
+/**
+ * タブをリロード
+ */
+async function reloadTab(tabId: number, bypassCache?: boolean) {
+  await browser.tabs.reload(tabId, { bypassCache: bypassCache || false });
+  return { success: true };
+}
+
+/**
+ * 最近閉じたタブ/ウィンドウを取得
+ */
+async function getRecentlyClosed() {
+  const sessions = await browser.sessions.getRecentlyClosed({ maxResults: 25 });
+  return sessions.map((s) => ({
+    sessionId: s.tab?.sessionId || s.window?.sessionId,
+    tab: s.tab ? {
+      title: s.tab.title,
+      url: s.tab.url,
+      favicon: s.tab.favIconUrl,
+    } : null,
+    window: s.window ? {
+      tabs: s.window.tabs?.map((t) => ({ title: t.title, url: t.url })),
+    } : null,
+  }));
+}
+
+/**
+ * セッションを復元
+ */
+async function restoreSession(sessionId: string) {
+  await browser.sessions.restore(sessionId);
+  return { success: true };
+}
+
+/**
+ * ブックマークを追加
+ */
+async function addBookmark(title: string, url: string) {
+  await browser.bookmarks.create({ title, url });
   return { success: true };
 }

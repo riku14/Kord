@@ -1,4 +1,4 @@
-export type ResultType = 'tab' | 'bookmark' | 'history' | 'command';
+export type ResultType = 'tab' | 'bookmark' | 'history' | 'command' | 'search' | 'session';
 
 export interface SearchResult {
   id: string;
@@ -14,6 +14,8 @@ export interface SearchResult {
   // コマンド用
   action?: string;
   shortcut?: string;
+  // セッション用
+  sessionId?: string;
 }
 
 export interface CommandDefinition {
@@ -38,4 +40,10 @@ export type MessageAction =
   | { type: 'PIN_TAB'; tabId: number; pinned: boolean }
   | { type: 'MUTE_TAB'; tabId: number; muted: boolean }
   | { type: 'NEW_TAB'; url?: string }
+  | { type: 'GO_BACK'; tabId: number }
+  | { type: 'GO_FORWARD'; tabId: number }
+  | { type: 'RELOAD_TAB'; tabId: number; bypassCache?: boolean }
+  | { type: 'GET_RECENTLY_CLOSED' }
+  | { type: 'RESTORE_SESSION'; sessionId: string }
+  | { type: 'ADD_BOOKMARK'; title: string; url: string }
   | { type: 'CLEAR_CACHE' };

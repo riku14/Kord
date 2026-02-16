@@ -4,19 +4,91 @@ import { recordUsage, getFrecencyData, calculateFrecencyScore } from '../../lib/
 import { COMMANDS } from '../../lib/constants';
 import type { SearchResult, ResultType } from '../../lib/types';
 
+// SVGアイコンコンポーネント
+const SearchIcon = ({ size = 20, color = 'white' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.35-4.35" />
+  </svg>
+);
+
+const CommandIcon = ({ size = 20, color = 'white' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
+
+const TabIcon = ({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+  </svg>
+);
+
+const BookmarkIcon = ({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const HistoryIcon = ({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const SessionIcon = ({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="1 4 1 10 7 10" />
+    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+  </svg>
+);
+
 function App() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isComposing, setIsComposing] = useState(false);
+  const [mode, setMode] = useState<'search' | 'command'>('search');
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // 初期化: オートフォーカス
+  // 初期化: オートフォーカス（複数回試行）
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const focusInput = () => {
       inputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timer);
+    };
+
+    // 即座にフォーカス
+    focusInput();
+
+    // タイマーで複数回試行
+    const timer1 = setTimeout(focusInput, 50);
+    const timer2 = setTimeout(focusInput, 150);
+    const timer3 = setTimeout(focusInput, 300);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, []);
+
+  // IME入力状態を監視
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    const handleCompositionStart = () => setIsComposing(true);
+    const handleCompositionEnd = () => setIsComposing(false);
+
+    input.addEventListener('compositionstart', handleCompositionStart);
+    input.addEventListener('compositionend', handleCompositionEnd);
+
+    return () => {
+      input.removeEventListener('compositionstart', handleCompositionStart);
+      input.removeEventListener('compositionend', handleCompositionEnd);
+    };
   }, []);
 
   // グローバルキーボードナビゲーション
@@ -28,7 +100,15 @@ function App() {
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
+      } else if (e.key === 'Tab') {
+        // IME入力中はスキップ
+        if (isComposing) return;
+        e.preventDefault();
+        setMode((prev) => prev === 'search' ? 'command' : 'search');
+        setSelectedIndex(0);
       } else if (e.key === 'Enter' && results.length > 0) {
+        // IME入力中は無視
+        if (isComposing) return;
         e.preventDefault();
         if (results[selectedIndex]) {
           executeResult(results[selectedIndex]);
@@ -41,7 +121,7 @@ function App() {
 
     document.addEventListener('keydown', handleGlobalKeyDown);
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [results, selectedIndex]);
+  }, [results, selectedIndex, isComposing, mode]);
 
   // 選択されたアイテムを画面内にスクロール
   useEffect(() => {
@@ -53,6 +133,26 @@ function App() {
     }
   }, [selectedIndex, results.length]);
 
+  // スクロール伝播を防止
+  useEffect(() => {
+    const resultsElement = resultsRef.current;
+    if (!resultsElement) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      const { scrollTop, scrollHeight, clientHeight } = resultsElement;
+      const isScrollingUp = e.deltaY < 0;
+      const isScrollingDown = e.deltaY > 0;
+
+      // 上端で上にスクロールしようとしている、または下端で下にスクロールしようとしている場合
+      if ((isScrollingUp && scrollTop === 0) || (isScrollingDown && scrollTop + clientHeight >= scrollHeight)) {
+        e.preventDefault();
+      }
+    };
+
+    resultsElement.addEventListener('wheel', preventScroll, { passive: false });
+    return () => resultsElement.removeEventListener('wheel', preventScroll);
+  }, []);
+
   // 検索クエリが変更されたら結果を更新
   useEffect(() => {
     const searchTimeout = setTimeout(() => {
@@ -60,7 +160,7 @@ function App() {
     }, 100);
 
     return () => clearTimeout(searchTimeout);
-  }, [query]);
+  }, [query, mode]);
 
   /**
    * 統合検索を実行
@@ -69,7 +169,31 @@ function App() {
     const trimmedQuery = searchQuery.trim();
     let allResults: SearchResult[] = [];
 
+    // コマンドモードの場合
+    if (mode === 'command') {
+      if (!trimmedQuery) {
+        // 空のクエリ: 全コマンドを表示
+        allResults = COMMANDS.map((cmd) => ({
+          id: cmd.id,
+          type: 'command' as ResultType,
+          title: cmd.title,
+          subtitle: cmd.subtitle,
+          action: cmd.action,
+          url: cmd.url,
+          score: 0,
+        }));
+      } else {
+        // 検索クエリあり: コマンドのみ検索
+        allResults = searchCommands(trimmedQuery).sort((a, b) => b.score - a.score);
+      }
+      setResults(allResults.slice(0, 12));
+      setSelectedIndex(0);
+      return;
+    }
+
+    // 検索モードの場合（既存のロジック）
     if (!trimmedQuery) {
+      // 空のクエリ: 開いているタブをFrecencyスコア順に表示
       const tabs = await getTabs();
       const frecencyData = await getFrecencyData();
       const tabResults: SearchResult[] = tabs.map((tab: any) => ({
@@ -84,13 +208,10 @@ function App() {
         windowId: tab.windowId,
       }));
       allResults = tabResults.sort((a, b) => b.score - a.score);
-    } else if (trimmedQuery.startsWith('>')) {
-      const commandQuery = trimmedQuery.slice(1).trim();
-      allResults = searchCommands(commandQuery);
     } else {
-      const [tabs, bookmarks, history] = await Promise.all([
+      // 検索クエリあり: タブと履歴のみ検索（Arc風）
+      const [tabs, history] = await Promise.all([
         getTabs(),
-        getBookmarks(),
         getHistory(trimmedQuery),
       ]);
 
@@ -114,20 +235,6 @@ function App() {
         })
         .filter((r) => r.score > 0);
 
-      const bookmarkResults: SearchResult[] = bookmarks
-        .map((bm: any) => {
-          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [bm.title, bm.url || '']).score;
-          return {
-            id: bm.id,
-            type: 'bookmark' as ResultType,
-            title: bm.title,
-            subtitle: bm.url,
-            url: bm.url,
-            score: fuzzyScore,
-          };
-        })
-        .filter((r) => r.score > 0);
-
       const historyResults: SearchResult[] = history
         .map((h: any) => {
           const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [h.title, h.url || '']).score;
@@ -142,14 +249,23 @@ function App() {
         })
         .filter((r) => r.score > 0);
 
-      const commandResults = searchCommands(trimmedQuery);
-
-      allResults = [...tabResults, ...bookmarkResults, ...historyResults, ...commandResults].sort(
+      allResults = [...tabResults, ...historyResults].sort(
         (a, b) => b.score - a.score
       );
+
+      // Google検索候補を最下部に追加
+      const googleSearchResult: SearchResult = {
+        id: 'google-search',
+        type: 'search' as ResultType,
+        title: `Google で "${trimmedQuery}" を検索`,
+        subtitle: `https://www.google.com/search?q=${encodeURIComponent(trimmedQuery)}`,
+        url: `https://www.google.com/search?q=${encodeURIComponent(trimmedQuery)}`,
+        score: -1, // 常に最下部に表示
+      };
+      allResults.push(googleSearchResult);
     }
 
-    setResults(allResults.slice(0, 10));
+    setResults(allResults.slice(0, 11)); // Google検索候補を含めて最大11件
     setSelectedIndex(0);
   };
 
@@ -164,7 +280,6 @@ function App() {
         action: cmd.action,
         url: cmd.url,
         score: fuzzyScore,
-        favicon: cmd.icon,
       };
     }).filter((r) => r.score > 0);
   };
@@ -197,8 +312,18 @@ function App() {
 
       case 'bookmark':
       case 'history':
+      case 'search':
         if (result.url) {
           await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
+        }
+        break;
+
+      case 'session':
+        if (result.sessionId) {
+          await browser.runtime.sendMessage({
+            type: 'RESTORE_SESSION',
+            sessionId: result.sessionId
+          });
         }
         break;
 
@@ -262,6 +387,51 @@ function App() {
         }
         break;
 
+      case 'GO_BACK':
+        const [backTab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (backTab?.id) {
+          await browser.runtime.sendMessage({ type: 'GO_BACK', tabId: backTab.id });
+        }
+        break;
+
+      case 'GO_FORWARD':
+        const [forwardTab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (forwardTab?.id) {
+          await browser.runtime.sendMessage({ type: 'GO_FORWARD', tabId: forwardTab.id });
+        }
+        break;
+
+      case 'RELOAD_TAB':
+        const [reloadTab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (reloadTab?.id) {
+          await browser.runtime.sendMessage({ type: 'RELOAD_TAB', tabId: reloadTab.id });
+        }
+        break;
+
+      case 'SHOW_RECENTLY_CLOSED':
+        const sessions = await browser.runtime.sendMessage({ type: 'GET_RECENTLY_CLOSED' });
+        const sessionResults: SearchResult[] = sessions.map((s: any) => ({
+          id: s.sessionId,
+          type: 'session' as ResultType,
+          title: s.tab?.title || s.window?.tabs?.[0]?.title || 'Untitled',
+          subtitle: s.tab?.url || `${s.window?.tabs?.length || 0} tabs`,
+          sessionId: s.sessionId,
+          score: 0,
+        }));
+        setResults(sessionResults.slice(0, 12));
+        break;
+
+      case 'ADD_BOOKMARK':
+        const [bookmarkTab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (bookmarkTab?.url && bookmarkTab?.title) {
+          await browser.runtime.sendMessage({
+            type: 'ADD_BOOKMARK',
+            title: bookmarkTab.title,
+            url: bookmarkTab.url
+          });
+        }
+        break;
+
       case 'CLEAR_CACHE':
         await browser.runtime.sendMessage({ type: 'CLEAR_CACHE' });
         break;
@@ -272,16 +442,21 @@ function App() {
     window.parent.postMessage({ type: 'CLOSE_PALETTE' }, '*');
   };
 
-  const getTypeIcon = (type: ResultType): string => {
+  const getTypeIcon = (type: ResultType): React.ReactNode => {
+    const iconColor = 'var(--qb-muted)';
     switch (type) {
       case 'tab':
-        return '🔲';
+        return <TabIcon size={20} color={iconColor} />;
       case 'bookmark':
-        return '⭐';
+        return <BookmarkIcon size={20} color={iconColor} />;
       case 'history':
-        return '🕐';
+        return <HistoryIcon size={20} color={iconColor} />;
       case 'command':
-        return '⚡';
+        return <CommandIcon size={20} color={iconColor} />;
+      case 'search':
+        return <SearchIcon size={20} color={iconColor} />;
+      case 'session':
+        return <SessionIcon size={20} color={iconColor} />;
     }
   };
 
@@ -295,21 +470,27 @@ function App() {
         return 'badge-history';
       case 'command':
         return 'badge-command';
+      case 'search':
+        return 'badge-search';
+      case 'session':
+        return 'badge-session';
     }
   };
 
   return (
-    <div>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 検索バー */}
       <div className="search-container">
         <div className="search-wrapper">
-          <div className="search-icon">⚡</div>
+          <div className="search-icon">
+            {mode === 'search' ? <SearchIcon size={18} /> : <CommandIcon size={18} />}
+          </div>
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search anything..."
+            placeholder={mode === 'search' ? 'Search tabs, history...' : 'Search commands...'}
             className="search-input"
             autoComplete="off"
             spellCheck="false"
@@ -322,20 +503,26 @@ function App() {
       <div ref={resultsRef} className="results-container">
         {results.length === 0 && query && (
           <div className="empty-state">
-            <div className="empty-icon">🔍</div>
+            <div className="empty-icon">
+              <SearchIcon size={32} />
+            </div>
             <p className="empty-title">No results found</p>
           </div>
         )}
 
         {results.length === 0 && !query && (
           <div className="empty-state">
-            <div className="empty-icon">⚡</div>
-            <p className="empty-title">Welcome to QuickBar</p>
+            <div className="empty-icon">
+              {mode === 'search' ? <SearchIcon size={32} /> : <CommandIcon size={32} />}
+            </div>
+            <p className="empty-title">{mode === 'search' ? 'Search Mode' : 'Command Mode'}</p>
             <p className="empty-subtitle">
-              Start typing to search tabs, bookmarks, and history
+              {mode === 'search'
+                ? 'Start typing to search tabs, bookmarks, and history'
+                : 'Start typing to search commands'}
             </p>
             <p className="empty-hint">
-              Type <kbd>&gt;</kbd> for commands
+              Press <kbd>Tab</kbd> to switch to {mode === 'search' ? 'Command Mode' : 'Search Mode'}
             </p>
           </div>
         )}
@@ -347,26 +534,17 @@ function App() {
             className={`result-item ${index === selectedIndex ? 'selected' : ''}`}
           >
             <div className="result-icon">
-              {result.favicon ? (
-                result.type === 'command' ? (
-                  <span style={{ fontSize: '20px' }}>{result.favicon}</span>
-                ) : (
-                  <img
-                    src={result.favicon}
-                    alt=""
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.innerHTML = getTypeIcon(result.type);
-                        parent.style.fontSize = '20px';
-                      }
-                    }}
-                  />
-                )
+              {result.favicon && result.type !== 'command' ? (
+                <img
+                  src={result.favicon}
+                  alt=""
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
               ) : (
-                <span>{getTypeIcon(result.type)}</span>
+                getTypeIcon(result.type)
               )}
             </div>
 
@@ -381,28 +559,6 @@ function App() {
           </div>
         ))}
       </div>
-
-      {/* フッター */}
-      {results.length > 0 && (
-        <div className="footer">
-          <div className="footer-item">
-            <kbd>↑</kbd>
-            <kbd>↓</kbd>
-            <span>Navigate</span>
-          </div>
-          <div className="footer-item">
-            <kbd>↵</kbd>
-            <span>Select</span>
-          </div>
-          <div className="footer-item">
-            <kbd>ESC</kbd>
-            <span>Close</span>
-          </div>
-          <div className="footer-count">
-            {results.length} result{results.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

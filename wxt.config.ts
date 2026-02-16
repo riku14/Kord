@@ -14,6 +14,7 @@ export default defineConfig({
       'storage',
       'activeTab',
       'scripting',
+      'sessions',
     ],
     commands: {
       'open-palette': {

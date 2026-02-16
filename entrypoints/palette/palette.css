@@ -30,6 +30,13 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -38,17 +45,23 @@ body {
 
 #root {
   width: 100%;
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   background: var(--qb-bg);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* 検索バー */
 .search-container {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   padding: 20px 20px 16px;
   border-bottom: 1px solid var(--qb-border);
+  background: var(--qb-bg);
+  flex-shrink: 0;
 }
 
 .search-wrapper {
@@ -98,8 +111,10 @@ body {
 
 /* 結果リスト */
 .results-container {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px;
 }
 
@@ -262,6 +277,16 @@ body {
 
 .badge-command {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.badge-search {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+}
+
+.badge-session {
+  background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
   color: white;
 }
 

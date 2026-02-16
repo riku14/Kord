@@ -58,7 +58,8 @@ export default defineContentScript({
       const iframe = document.createElement('iframe');
       iframe.style.cssText = `
         width: 680px;
-        max-height: 520px;
+        height: 47vh;
+        min-height: 200px;
         border: none;
         border-radius: 16px;
         box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
@@ -66,6 +67,56 @@ export default defineContentScript({
         backdrop-filter: blur(10px);
         overflow: hidden;
       `;
+
+      // iframe内のコンテンツサイズに合わせて高さを自動調整
+      iframe.addEventListener('load', () => {
+        const adjustHeight = () => {
+          try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (iframeDoc) {
+              // body全体の高さを取得
+              const body = iframeDoc.body;
+              const html = iframeDoc.documentElement;
+
+              // scrollHeightで実際のコンテンツ高さを取得
+              const contentHeight = Math.max(
+                body.scrollHeight,
+                body.offsetHeight,
+                html.clientHeight,
+                html.scrollHeight,
+                html.offsetHeight
+              );
+
+              // 最大高さは画面の約47%（5件表示程度）
+              const maxHeight = window.innerHeight * 0.47;
+              const finalHeight = Math.min(contentHeight, maxHeight);
+
+              console.log('Content height:', contentHeight, 'Final height:', finalHeight);
+              iframe.style.height = `${finalHeight}px`;
+            }
+          } catch (e) {
+            console.error('Failed to adjust iframe height:', e);
+          }
+        };
+
+        // 初回調整（DOMが完全にレンダリングされるまで待つ）
+        setTimeout(adjustHeight, 100);
+        setTimeout(adjustHeight, 300);
+        setTimeout(adjustHeight, 500);
+
+        // コンテンツの変更を監視して高さを調整
+        const observer = new MutationObserver(() => {
+          setTimeout(adjustHeight, 50);
+        });
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (iframeDoc) {
+          observer.observe(iframeDoc.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+          });
+        }
+      });
 
       // パレットのHTMLページを読み込み
       iframe.src = browser.runtime.getURL('/palette.html');
