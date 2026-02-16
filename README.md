@@ -17,7 +17,7 @@ A powerful command palette for Chrome that brings Arc Browser-like search experi
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/riku14/QuickBar.git
    cd quickbar
    ```
 
@@ -84,7 +84,7 @@ QuickBar includes these built-in commands:
 
 - **Framework**: [WXT](https://wxt.dev/) - Modern Chrome Extension Framework
 - **UI**: React 18 + TypeScript
-- **Styling**: Tailwind CSS
+- **Styling**: Custom CSS (Arc Browser-inspired design)
 - **Build**: Vite (via WXT)
 - **Manifest**: V3
 
@@ -98,16 +98,14 @@ quickbar/
 │   ├── palette/               # Command Palette UI
 │   │   ├── index.html
 │   │   ├── main.tsx
-│   │   └── App.tsx
+│   │   ├── App.tsx
+│   │   └── palette.css        # Arc-inspired styling
 │   └── popup/                 # Extension icon popup
 ├── lib/
 │   ├── types.ts               # Type definitions
 │   ├── constants.ts           # Command definitions
 │   ├── fuzzy.ts               # Fuzzy search algorithm
 │   └── frecency.ts            # Frecency scoring
-├── assets/
-│   └── styles/
-│       └── globals.css        # Tailwind + custom CSS
 └── public/
     └── icon/                  # Extension icons
 ```
@@ -132,17 +130,17 @@ Output will be in `.output/chrome-mv3/`
 
 ### Testing Checklist
 
-- [ ] Ctrl+K opens the palette
-- [ ] Esc closes the palette
-- [ ] Overlay click closes the palette
-- [ ] Tab search works
-- [ ] Bookmark search works
-- [ ] History search works
-- [ ] Command prefix `>` filters commands
-- [ ] Arrow keys navigate results
-- [ ] Enter executes selected result
-- [ ] Dark/Light mode switches correctly
-- [ ] Extension icon shows popup
+- [x] Ctrl+K opens the palette
+- [x] Esc closes the palette
+- [x] Overlay click closes the palette
+- [x] Tab search works
+- [x] Bookmark search works
+- [x] History search works
+- [x] Command prefix `>` filters commands
+- [x] Arrow keys navigate results
+- [x] Enter executes selected result
+- [x] Dark/Light mode switches correctly
+- [x] Extension icon shows popup
 
 ## 🤝 Contributing
 
