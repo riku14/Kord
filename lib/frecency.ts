@@ -14,13 +14,66 @@ interface FrecencyData {
 }
 
 const STORAGE_KEY = 'quickbar_frecency';
+const MAX_AGE_DAYS = 90;
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24時間
+const CLEANUP_TIMESTAMP_KEY = 'quickbar_frecency_last_cleanup';
+
+/**
+ * 古いデータをクリーンアップ
+ */
+async function cleanupOldRecords(data: FrecencyData): Promise<FrecencyData> {
+  const now = Date.now();
+  const maxAge = MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+
+  const cleaned: FrecencyData = {};
+  let removedCount = 0;
+
+  for (const [id, record] of Object.entries(data)) {
+    const age = now - record.lastUsed;
+    if (age < maxAge) {
+      cleaned[id] = record;
+    } else {
+      removedCount++;
+    }
+  }
+
+  if (removedCount > 0) {
+    console.log(`QuickBar: Cleaned up ${removedCount} old frecency records`);
+  }
+
+  return cleaned;
+}
+
+/**
+ * クリーンアップが必要か判定
+ */
+async function shouldCleanup(): Promise<boolean> {
+  try {
+    const result = await chrome.storage.local.get(CLEANUP_TIMESTAMP_KEY);
+    const lastCleanup = result[CLEANUP_TIMESTAMP_KEY] || 0;
+    return Date.now() - lastCleanup > CLEANUP_INTERVAL_MS;
+  } catch {
+    return true; // エラー時は安全のためクリーンアップ実行
+  }
+}
+
+/**
+ * クリーンアップタイムスタンプを更新
+ */
+async function updateCleanupTimestamp(): Promise<void> {
+  try {
+    await chrome.storage.local.set({ [CLEANUP_TIMESTAMP_KEY]: Date.now() });
+  } catch (error) {
+    console.error('Failed to update cleanup timestamp:', error);
+  }
+}
 
 /**
  * 使用履歴を記録
  */
 export async function recordUsage(id: string): Promise<void> {
   try {
-    const data = await getFrecencyData();
+    let data = await getFrecencyData();
     const now = Date.now();
 
     if (data[id]) {
@@ -32,6 +85,12 @@ export async function recordUsage(id: string): Promise<void> {
         count: 1,
         lastUsed: now,
       };
+    }
+
+    // 定期的にクリーンアップ実行
+    if (await shouldCleanup()) {
+      data = await cleanupOldRecords(data);
+      await updateCleanupTimestamp();
     }
 
     await chrome.storage.local.set({ [STORAGE_KEY]: data });

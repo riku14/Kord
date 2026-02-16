@@ -1,3 +1,5 @@
+import { isValidMessageOrigin } from '../lib/security';
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   main() {
@@ -31,6 +33,18 @@ export default defineContentScript({
       if (paletteRoot) {
         paletteRoot.style.display = 'flex';
         isVisible = true;
+
+        // iframeにフォーカス要求メッセージを送信
+        const shadowRoot = paletteRoot.shadowRoot;
+        if (shadowRoot) {
+          const iframe = shadowRoot.querySelector('iframe');
+          if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage(
+              { type: 'PALETTE_SHOWN' },
+              browser.runtime.getURL('/')
+            );
+          }
+        }
         return;
       }
 
@@ -74,11 +88,9 @@ export default defineContentScript({
           try {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
             if (iframeDoc) {
-              // body全体の高さを取得
               const body = iframeDoc.body;
               const html = iframeDoc.documentElement;
 
-              // scrollHeightで実際のコンテンツ高さを取得
               const contentHeight = Math.max(
                 body.scrollHeight,
                 body.offsetHeight,
@@ -87,11 +99,10 @@ export default defineContentScript({
                 html.offsetHeight
               );
 
-              // 最大高さは画面の約47%（5件表示程度）
+              // 最大高さは画面の約47%
               const maxHeight = window.innerHeight * 0.47;
               const finalHeight = Math.min(contentHeight, maxHeight);
 
-              console.log('Content height:', contentHeight, 'Final height:', finalHeight);
               iframe.style.height = `${finalHeight}px`;
             }
           } catch (e) {
@@ -99,18 +110,25 @@ export default defineContentScript({
           }
         };
 
-        // 初回調整（DOMが完全にレンダリングされるまで待つ）
+        // 初回調整（DOMレンダリング待機）
         setTimeout(adjustHeight, 100);
-        setTimeout(adjustHeight, 300);
-        setTimeout(adjustHeight, 500);
 
-        // コンテンツの変更を監視して高さを調整
-        const observer = new MutationObserver(() => {
-          setTimeout(adjustHeight, 50);
-        });
+        // ResizeObserverでコンテンツサイズ変更を監視
         const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (iframeDoc) {
-          observer.observe(iframeDoc.body, {
+        if (iframeDoc && 'ResizeObserver' in window) {
+          const resizeObserver = new ResizeObserver(() => {
+            adjustHeight();
+          });
+
+          // body要素のサイズ変更を監視
+          resizeObserver.observe(iframeDoc.body);
+        } else {
+          // ResizeObserver非対応ブラウザ用フォールバック
+          const observer = new MutationObserver(() => {
+            setTimeout(adjustHeight, 50);
+          });
+
+          observer.observe(iframeDoc!.body, {
             childList: true,
             subtree: true,
             attributes: true,
@@ -130,8 +148,8 @@ export default defineContentScript({
         }
       });
 
-      // Escキーで閉じる
-      document.addEventListener('keydown', handleEscKey);
+      // Escキーで閉じる（キャプチャフェーズで確実に捕捉）
+      document.addEventListener('keydown', handleEscKey, true);
 
       // iframeからのメッセージを受信
       window.addEventListener('message', handlePaletteMessage);
@@ -147,14 +165,29 @@ export default defineContentScript({
       if (paletteRoot) {
         paletteRoot.style.display = 'none';
         isVisible = false;
+
+        // iframeに非表示メッセージを送信（状態リセット用）
+        const shadowRoot = paletteRoot.shadowRoot;
+        if (shadowRoot) {
+          const iframe = shadowRoot.querySelector('iframe');
+          if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage(
+              { type: 'PALETTE_HIDDEN' },
+              browser.runtime.getURL('/')
+            );
+          }
+        }
       }
     }
 
     /**
-     * Escキーハンドラー
+     * Escキーハンドラー（確実に閉じる）
      */
     function handleEscKey(e: KeyboardEvent) {
-      if (e.key === 'Escape' && isVisible) {
+      if ((e.key === 'Escape' || e.key === 'Esc') && isVisible) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         hidePalette();
       }
     }
@@ -163,7 +196,14 @@ export default defineContentScript({
      * パレットからのメッセージハンドラー
      */
     function handlePaletteMessage(e: MessageEvent) {
+      // Origin検証を追加
+      if (!isValidMessageOrigin(e.origin)) {
+        console.warn('QuickBar: Rejected message from untrusted origin:', e.origin);
+        return;
+      }
+
       if (e.data?.type === 'CLOSE_PALETTE') {
+        e.stopPropagation();
         hidePalette();
       }
     }

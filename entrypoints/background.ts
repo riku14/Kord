@@ -1,4 +1,5 @@
 import type { MessageAction } from '../lib/types';
+import { isSafeUrl } from '../lib/security';
 
 export default defineBackground(() => {
   console.log('QuickBar background service worker started');
@@ -101,7 +102,8 @@ async function getTabs() {
     windowId: tab.windowId,
     title: tab.title || 'Untitled',
     url: tab.url,
-    favicon: tab.favIconUrl,
+    // faviconのURL検証を追加
+    favicon: isSafeUrl(tab.favIconUrl) ? tab.favIconUrl : undefined,
     pinned: tab.pinned,
     active: tab.active,
   }));

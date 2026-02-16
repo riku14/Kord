@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>QuickBar ESC テスト</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; }
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 20vh;
+      z-index: 9999;
+    }
+    #overlay.visible { display: flex !important; }
+    #palette-frame {
+      width: 400px;
+      height: 200px;
+      border: none;
+      border-radius: 16px;
+      background: white;
+    }
+    .status { margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>QuickBar ESC 閉じ動作テスト</h1>
+  <p>
+    <button id="open">モーダルを開く</button>
+  </p>
+  <div id="status" class="status">準備完了。モーダルを開いて ESC で閉じることを確認してください。</div>
+
+  <div id="overlay">
+    <iframe id="palette-frame" sandbox="allow-scripts" srcdoc="
+      <!DOCTYPE html>
+      <html>
+      <head><style>body{font-family:sans-serif;padding:20px;}</style></head>
+      <body>
+        <h2>パレット（ESCで閉じる）</h2>
+        <input type='text' placeholder='入力欄にフォーカス中...' style='width:100%;padding:8px;'>
+        <script>
+          document.querySelector('input').focus();
+          window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+              e.preventDefault();
+              e.stopPropagation();
+              window.parent.postMessage({ type: 'CLOSE_PALETTE' }, '*');
+            }
+          }, true);
+        </script>
+      </body>
+      </html>
+    "></iframe>
+  </div>
+
+  <script>
+    const overlay = document.getElementById('overlay');
+    const statusEl = document.getElementById('status');
+    const openBtn = document.getElementById('open');
+
+    openBtn.onclick = () => {
+      overlay.classList.add('visible');
+      overlay.querySelector('iframe').focus();
+      statusEl.textContent = 'モーダル表示中。ESC を押してください。';
+    };
+
+    window.addEventListener('message', (e) => {
+      if (e.data?.type === 'CLOSE_PALETTE') {
+        overlay.classList.remove('visible');
+        statusEl.textContent = '✅ ESCでモーダルが閉じました！';
+      }
+    });
+  </script>
+</body>
+</html>

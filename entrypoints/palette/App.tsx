@@ -3,6 +3,7 @@ import { fuzzyMatchMultiple } from '../../lib/fuzzy';
 import { recordUsage, getFrecencyData, calculateFrecencyScore } from '../../lib/frecency';
 import { COMMANDS } from '../../lib/constants';
 import type { SearchResult, ResultType } from '../../lib/types';
+import { getExtensionOrigin, isSafeUrl } from '../../lib/security';
 
 // SVGアイコンコンポーネント
 const SearchIcon = ({ size = 20, color = 'white' }: { size?: number; color?: string }) => (
@@ -50,6 +51,7 @@ function App() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isComposing, setIsComposing] = useState(false);
   const [mode, setMode] = useState<'search' | 'command'>('search');
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -74,6 +76,27 @@ function App() {
     };
   }, []);
 
+  // パレット表示/非表示メッセージを受信
+  useEffect(() => {
+    const handlePaletteMessages = (e: MessageEvent) => {
+      if (e.data?.type === 'PALETTE_SHOWN') {
+        // フォーカスを設定
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 50);
+      } else if (e.data?.type === 'PALETTE_HIDDEN') {
+        // 状態をリセット
+        setQuery('');
+        setSelectedIndex(0);
+        setMode('search');
+        setError(null);
+      }
+    };
+
+    window.addEventListener('message', handlePaletteMessages);
+    return () => window.removeEventListener('message', handlePaletteMessages);
+  }, []);
+
   // IME入力状態を監視
   useEffect(() => {
     const input = inputRef.current;
@@ -91,7 +114,31 @@ function App() {
     };
   }, []);
 
-  // グローバルキーボードナビゲーション
+  // ESCキー専用ハンドラ（iframe内で確実に捕捉・閉じる。依存なしで常時有効）
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        try {
+          const origin = getExtensionOrigin();
+          // 複数の方法で送信を試みる
+          window.parent.postMessage({ type: 'CLOSE_PALETTE' }, origin);
+          window.parent.postMessage({ type: 'CLOSE_PALETTE' }, '*');
+          if (window.top && window.top !== window) {
+            window.top.postMessage({ type: 'CLOSE_PALETTE' }, '*');
+          }
+        } catch (err) {
+          console.error('Failed to close palette:', err);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleEscape, true);
+    return () => window.removeEventListener('keydown', handleEscape, true);
+  }, []);
+
+  // グローバルキーボードナビゲーション（矢印・Tab・Enter）
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
@@ -113,14 +160,11 @@ function App() {
         if (results[selectedIndex]) {
           executeResult(results[selectedIndex]);
         }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        closePalette();
       }
     };
 
-    document.addEventListener('keydown', handleGlobalKeyDown);
-    return () => document.removeEventListener('keydown', handleGlobalKeyDown);
+    document.addEventListener('keydown', handleGlobalKeyDown, true);
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown, true);
   }, [results, selectedIndex, isComposing, mode]);
 
   // 選択されたアイテムを画面内にスクロール
@@ -157,7 +201,7 @@ function App() {
   useEffect(() => {
     const searchTimeout = setTimeout(() => {
       performSearch(query);
-    }, 100);
+    }, 300); // 100ms → 300msに変更
 
     return () => clearTimeout(searchTimeout);
   }, [query, mode]);
@@ -297,149 +341,170 @@ function App() {
   };
 
   const executeResult = async (result: SearchResult) => {
-    await recordUsage(result.id);
+    try {
+      await recordUsage(result.id);
 
-    switch (result.type) {
-      case 'tab':
-        if (result.tabId && result.windowId) {
-          await browser.runtime.sendMessage({
-            type: 'SWITCH_TAB',
-            tabId: result.tabId,
-            windowId: result.windowId,
-          });
-        }
-        break;
+      switch (result.type) {
+        case 'tab':
+          if (result.tabId && result.windowId) {
+            await browser.runtime.sendMessage({
+              type: 'SWITCH_TAB',
+              tabId: result.tabId,
+              windowId: result.windowId,
+            });
+          }
+          break;
 
-      case 'bookmark':
-      case 'history':
-      case 'search':
-        if (result.url) {
-          await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
-        }
-        break;
+        case 'bookmark':
+        case 'history':
+        case 'search':
+          if (result.url) {
+            await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
+          }
+          break;
 
-      case 'session':
-        if (result.sessionId) {
-          await browser.runtime.sendMessage({
-            type: 'RESTORE_SESSION',
-            sessionId: result.sessionId
-          });
-        }
-        break;
+        case 'session':
+          if (result.sessionId) {
+            await browser.runtime.sendMessage({
+              type: 'RESTORE_SESSION',
+              sessionId: result.sessionId
+            });
+          }
+          break;
 
-      case 'command':
-        await executeCommand(result);
-        break;
+        case 'command':
+          await executeCommand(result);
+          break;
+      }
+
+      closePalette();
+    } catch (error) {
+      console.error('Failed to execute result:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error occurred');
+      // 3秒後にエラーメッセージをクリア
+      setTimeout(() => setError(null), 3000);
     }
-
-    closePalette();
   };
 
   const executeCommand = async (result: SearchResult) => {
-    const action = result.action;
-    if (!action) return;
+    try {
+      const action = result.action;
+      if (!action) return;
 
-    switch (action) {
-      case 'NEW_TAB':
-        await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
-        break;
+      switch (action) {
+        case 'NEW_TAB':
+          await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
+          break;
 
-      case 'CLOSE_TAB':
-        const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (currentTab?.id) {
-          await browser.runtime.sendMessage({ type: 'CLOSE_TAB', tabId: currentTab.id });
-        }
-        break;
+        case 'CLOSE_TAB':
+          const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (currentTab?.id) {
+            await browser.runtime.sendMessage({ type: 'CLOSE_TAB', tabId: currentTab.id });
+          }
+          break;
 
-      case 'CLOSE_OTHER_TABS':
-        const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (activeTab?.id) {
-          await browser.runtime.sendMessage({ type: 'CLOSE_OTHER_TABS', tabId: activeTab.id });
-        }
-        break;
+        case 'CLOSE_OTHER_TABS':
+          const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (activeTab?.id) {
+            await browser.runtime.sendMessage({ type: 'CLOSE_OTHER_TABS', tabId: activeTab.id });
+          }
+          break;
 
-      case 'DUPLICATE_TAB':
-        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (tab?.id) {
-          await browser.runtime.sendMessage({ type: 'DUPLICATE_TAB', tabId: tab.id });
-        }
-        break;
+        case 'DUPLICATE_TAB':
+          const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (tab?.id) {
+            await browser.runtime.sendMessage({ type: 'DUPLICATE_TAB', tabId: tab.id });
+          }
+          break;
 
-      case 'PIN_TAB':
-        const [pinTab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (pinTab?.id) {
-          await browser.runtime.sendMessage({
-            type: 'PIN_TAB',
-            tabId: pinTab.id,
-            pinned: !pinTab.pinned,
-          });
-        }
-        break;
+        case 'PIN_TAB':
+          const [pinTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (pinTab?.id) {
+            await browser.runtime.sendMessage({
+              type: 'PIN_TAB',
+              tabId: pinTab.id,
+              pinned: !pinTab.pinned,
+            });
+          }
+          break;
 
-      case 'MUTE_TAB':
-        const [muteTab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (muteTab?.id) {
-          await browser.runtime.sendMessage({
-            type: 'MUTE_TAB',
-            tabId: muteTab.id,
-            muted: !muteTab.mutedInfo?.muted,
-          });
-        }
-        break;
+        case 'MUTE_TAB':
+          const [muteTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (muteTab?.id) {
+            await browser.runtime.sendMessage({
+              type: 'MUTE_TAB',
+              tabId: muteTab.id,
+              muted: !muteTab.mutedInfo?.muted,
+            });
+          }
+          break;
 
-      case 'GO_BACK':
-        const [backTab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (backTab?.id) {
-          await browser.runtime.sendMessage({ type: 'GO_BACK', tabId: backTab.id });
-        }
-        break;
+        case 'GO_BACK':
+          const [backTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (backTab?.id) {
+            await browser.runtime.sendMessage({ type: 'GO_BACK', tabId: backTab.id });
+          }
+          break;
 
-      case 'GO_FORWARD':
-        const [forwardTab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (forwardTab?.id) {
-          await browser.runtime.sendMessage({ type: 'GO_FORWARD', tabId: forwardTab.id });
-        }
-        break;
+        case 'GO_FORWARD':
+          const [forwardTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (forwardTab?.id) {
+            await browser.runtime.sendMessage({ type: 'GO_FORWARD', tabId: forwardTab.id });
+          }
+          break;
 
-      case 'RELOAD_TAB':
-        const [reloadTab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (reloadTab?.id) {
-          await browser.runtime.sendMessage({ type: 'RELOAD_TAB', tabId: reloadTab.id });
-        }
-        break;
+        case 'RELOAD_TAB':
+          const [reloadTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (reloadTab?.id) {
+            await browser.runtime.sendMessage({ type: 'RELOAD_TAB', tabId: reloadTab.id });
+          }
+          break;
 
-      case 'SHOW_RECENTLY_CLOSED':
-        const sessions = await browser.runtime.sendMessage({ type: 'GET_RECENTLY_CLOSED' });
-        const sessionResults: SearchResult[] = sessions.map((s: any) => ({
-          id: s.sessionId,
-          type: 'session' as ResultType,
-          title: s.tab?.title || s.window?.tabs?.[0]?.title || 'Untitled',
-          subtitle: s.tab?.url || `${s.window?.tabs?.length || 0} tabs`,
-          sessionId: s.sessionId,
-          score: 0,
-        }));
-        setResults(sessionResults.slice(0, 12));
-        break;
+        case 'SHOW_RECENTLY_CLOSED':
+          const sessions = await browser.runtime.sendMessage({ type: 'GET_RECENTLY_CLOSED' });
+          const sessionResults: SearchResult[] = sessions.map((s: any) => ({
+            id: s.sessionId,
+            type: 'session' as ResultType,
+            title: s.tab?.title || s.window?.tabs?.[0]?.title || 'Untitled',
+            subtitle: s.tab?.url || `${s.window?.tabs?.length || 0} tabs`,
+            sessionId: s.sessionId,
+            score: 0,
+          }));
+          setResults(sessionResults.slice(0, 12));
+          break;
 
-      case 'ADD_BOOKMARK':
-        const [bookmarkTab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (bookmarkTab?.url && bookmarkTab?.title) {
-          await browser.runtime.sendMessage({
-            type: 'ADD_BOOKMARK',
-            title: bookmarkTab.title,
-            url: bookmarkTab.url
-          });
-        }
-        break;
+        case 'ADD_BOOKMARK':
+          const [bookmarkTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (bookmarkTab?.url && bookmarkTab?.title) {
+            await browser.runtime.sendMessage({
+              type: 'ADD_BOOKMARK',
+              title: bookmarkTab.title,
+              url: bookmarkTab.url
+            });
+          }
+          break;
 
-      case 'CLEAR_CACHE':
-        await browser.runtime.sendMessage({ type: 'CLEAR_CACHE' });
-        break;
+        case 'CLEAR_CACHE':
+          await browser.runtime.sendMessage({ type: 'CLEAR_CACHE' });
+          break;
+      }
+    } catch (error) {
+      console.error('Failed to execute command:', error);
+      setError(error instanceof Error ? error.message : 'Command execution failed');
+      setTimeout(() => setError(null), 3000);
     }
   };
 
   const closePalette = () => {
-    window.parent.postMessage({ type: 'CLOSE_PALETTE' }, '*');
+    try {
+      // 拡張機能のオリジンを明示的に指定
+      window.parent.postMessage(
+        { type: 'CLOSE_PALETTE' },
+        getExtensionOrigin()
+      );
+    } catch (error) {
+      console.error('Failed to close palette:', error);
+    }
   };
 
   const getTypeIcon = (type: ResultType): React.ReactNode => {
@@ -479,6 +544,25 @@ function App() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* エラー通知 */}
+      {error && (
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#ff4444',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          zIndex: 1000,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        }}>
+          {error}
+        </div>
+      )}
+
       {/* 検索バー */}
       <div className="search-container">
         <div className="search-wrapper">
@@ -534,7 +618,7 @@ function App() {
             className={`result-item ${index === selectedIndex ? 'selected' : ''}`}
           >
             <div className="result-icon">
-              {result.favicon && result.type !== 'command' ? (
+              {result.favicon && result.type !== 'command' && isSafeUrl(result.favicon) ? (
                 <img
                   src={result.favicon}
                   alt=""

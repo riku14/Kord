@@ -13,7 +13,6 @@ export default defineConfig({
       'browsingData',
       'storage',
       'activeTab',
-      'scripting',
       'sessions',
     ],
     commands: {
@@ -31,11 +30,6 @@ export default defineConfig({
         matches: ['<all_urls>'],
       },
     ],
-    content_scripts: [
-      {
-        matches: ['<all_urls>'],
-        js: ['content-scripts/content.js'],
-      },
-    ],
+    // content_scripts削除（WXTが自動生成）
   },
 });
