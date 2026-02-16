@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Arc風カラーパレット（Light Mode） */
+:root {
+  --qb-bg: #ffffff;
+  --qb-input: #f8f9fa;
+  --qb-border: #e0e4e8;
+  --qb-text: #1a1d23;
+  --qb-muted: #6e7681;
+  --qb-accent: #3b82f6;
+  --qb-hover: #f3f4f6;
+  --qb-selected: #eff6ff;
+}
+
+/* Arc風カラーパレット（Dark Mode） */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --qb-bg: #1c1e26;
+    --qb-input: #24273a;
+    --qb-border: #363a4f;
+    --qb-text: #e4e6eb;
+    --qb-muted: #8087a2;
+    --qb-accent: #7aa2f7;
+    --qb-hover: #282c3c;
+    --qb-selected: #2d3548;
+  }
+}
+
+/* スクロールバーのスタイリング（Arc風） */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--qb-border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--qb-border);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--qb-muted);
+}
+
+/* スムーズなアニメーション */
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* フォントのアンチエイリアス */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
