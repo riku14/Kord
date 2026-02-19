@@ -99,10 +99,16 @@
     "message": "현재 탭을 북마크에 추가"
   },
   "cmdClearCache": {
-    "message": "캐시 지우기"
+    "message": "캐시 지우기 및 새로고침"
   },
   "cmdClearCacheDesc": {
-    "message": "브라우저 캐시 지우기"
+    "message": "브라우저 캐시를 지우고 페이지 새로고침"
+  },
+  "cmdClearCookies": {
+    "message": "쿠키 지우기 및 새로고침"
+  },
+  "cmdClearCookiesDesc": {
+    "message": "브라우저 쿠키를 지우고 페이지 새로고침"
   },
   "cmdOpenDownloads": {
     "message": "다운로드 열기"

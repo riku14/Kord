@@ -12,6 +12,8 @@ export default defineContentScript({
     browser.runtime.onMessage.addListener((message) => {
       if (message.type === 'TOGGLE_PALETTE') {
         togglePalette();
+      } else if (message.type === 'CLOSE_PALETTE') {
+        hidePalette();
       }
     });
 

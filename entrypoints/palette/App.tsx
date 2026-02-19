@@ -61,6 +61,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const prevModeRef = useRef(mode);
 
   // 初期化: オートフォーカス（複数回試行）
   useEffect(() => {
@@ -85,7 +86,7 @@ function App() {
 
   // パレット表示/非表示メッセージを受信
   useEffect(() => {
-    const handlePaletteMessages = (e: MessageEvent) => {
+    const handlePaletteMessages = (e: MessageEvent): void => {
       if (e.data?.type === 'PALETTE_SHOWN') {
         // フォーカスを設定
         setTimeout(() => {
@@ -206,10 +207,19 @@ function App() {
 
   // 検索クエリが変更されたら結果を更新
   useEffect(() => {
-    const searchTimeout = setTimeout(() => {
-      performSearch(query);
-    }, 300); // 100ms → 300msに変更
+    const modeChanged = prevModeRef.current !== mode;
+    prevModeRef.current = mode;
 
+    const runSearch = () => performSearch(query);
+
+    if (modeChanged) {
+      // Tab切り替え時は即時実行（遅延なし）
+      runSearch();
+      return;
+    }
+
+    // 入力時は300msデバウンス
+    const searchTimeout = setTimeout(runSearch, 300);
     return () => clearTimeout(searchTimeout);
   }, [query, mode]);
 
@@ -262,9 +272,10 @@ function App() {
       allResults = tabResults.sort((a, b) => b.score - a.score);
     } else {
       // 検索クエリあり: タブと履歴のみ検索（Arc風）
-      const [tabs, history] = await Promise.all([
+      const [tabs, history, suggestions] = await Promise.all([
         getTabs(),
         getHistory(trimmedQuery),
+        getGoogleSuggestions(trimmedQuery),
       ]);
 
       const frecencyData = await getFrecencyData();
@@ -285,7 +296,7 @@ function App() {
             windowId: tab.windowId,
           };
         })
-        .filter((r) => r.score > 0.3); // スコア閾値を設定（Arc風）
+        .filter((r: SearchResult) => r.score > 0.3); // スコア閾値を設定（Arc風）
 
       const historyResults: SearchResult[] = history
         .map((h: any) => {
@@ -299,22 +310,22 @@ function App() {
             score: fuzzyScore,
           };
         })
-        .filter((r) => r.score > 0.3); // スコア閾値を設定
+        .filter((r: SearchResult) => r.score > 0.3); // スコア閾値を設定
 
       allResults = [...tabResults, ...historyResults].sort(
         (a, b) => b.score - a.score
       );
 
-      // Google検索候補を最下部に追加
-      const googleSearchResult: SearchResult = {
-        id: 'google-search',
+      // Google検索候補を最下部に追加（複数表示）
+      const searchResults: SearchResult[] = suggestions.map((suggestion: string, index: number) => ({
+        id: `google-search-${index}`,
         type: 'search' as ResultType,
-        title: `${t('googleSearch')} "${trimmedQuery}"`,
-        subtitle: `https://www.google.com/search?q=${encodeURIComponent(trimmedQuery)}`,
-        url: `https://www.google.com/search?q=${encodeURIComponent(trimmedQuery)}`,
-        score: -1, // 常に最下部に表示
-      };
-      allResults.push(googleSearchResult);
+        title: suggestion,
+        subtitle: `https://www.google.com/search?q=${encodeURIComponent(suggestion)}`,
+        url: `https://www.google.com/search?q=${encodeURIComponent(suggestion)}`,
+        score: -1 - index, // 順序を保持しつつ最下部に表示
+      }));
+      allResults.push(...searchResults);
     }
 
     setResults(allResults.slice(0, 11)); // Google検索候補を含めて最大11件
@@ -347,6 +358,23 @@ function App() {
 
   const getHistory = async (query: string) => {
     return browser.runtime.sendMessage({ type: 'GET_HISTORY', query });
+  };
+
+  const getGoogleSuggestions = async (query: string): Promise<string[]> => {
+    try {
+      // Google Suggest APIを使用して検索候補を取得
+      const response = await fetch(
+        `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}`
+      );
+      const data = await response.json();
+      // data[1]に候補の配列が含まれる
+      const suggestions = data[1]?.slice(0, 4) || []; // 最大4件の候補を取得
+      // 入力されたクエリを先頭に追加
+      return [query, ...suggestions.filter((s: string) => s !== query)];
+    } catch (error) {
+      console.error('Failed to fetch Google suggestions:', error);
+      return [query]; // エラー時は元のクエリを返す
+    }
   };
 
   const executeResult = async (result: SearchResult) => {
@@ -509,9 +537,21 @@ function App() {
           }
           break;
 
-        case 'CLEAR_CACHE':
-          await browser.runtime.sendMessage({ type: 'CLEAR_CACHE' });
+        case 'CLEAR_CACHE': {
+          const [cacheTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (cacheTab?.id) {
+            await browser.runtime.sendMessage({ type: 'CLEAR_CACHE', tabId: cacheTab.id });
+          }
           break;
+        }
+
+        case 'CLEAR_COOKIES': {
+          const [cookieTab] = await browser.tabs.query({ active: true, currentWindow: true });
+          if (cookieTab?.id) {
+            await browser.runtime.sendMessage({ type: 'CLEAR_COOKIES', tabId: cookieTab.id });
+          }
+          break;
+        }
       }
     } catch (error) {
       console.error('Failed to execute command:', error);

@@ -99,10 +99,16 @@
     "message": "Bookmark the current tab"
   },
   "cmdClearCache": {
-    "message": "Clear Cache"
+    "message": "Clear Cache and Refresh"
   },
   "cmdClearCacheDesc": {
-    "message": "Clear browser cache"
+    "message": "Clear browser cache and reload the page"
+  },
+  "cmdClearCookies": {
+    "message": "Clear Cookies and Refresh"
+  },
+  "cmdClearCookiesDesc": {
+    "message": "Clear browser cookies and reload the page"
   },
   "cmdOpenDownloads": {
     "message": "Open Downloads"

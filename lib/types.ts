@@ -47,4 +47,5 @@ export type MessageAction =
   | { type: 'GET_RECENTLY_CLOSED' }
   | { type: 'RESTORE_SESSION'; sessionId: string }
   | { type: 'ADD_BOOKMARK'; title: string; url: string }
-  | { type: 'CLEAR_CACHE' };
+  | { type: 'CLEAR_CACHE'; tabId: number }
+  | { type: 'CLEAR_COOKIES'; tabId: number };

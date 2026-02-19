@@ -14,6 +14,7 @@ export const COMMANDS: CommandDefinition[] = [
   { id: 'cmd-recently-closed', title: t('cmdRecentlyClosed'), subtitle: t('cmdRecentlyClosedDesc'), action: 'SHOW_RECENTLY_CLOSED', icon: 'RotateCcw' },
   { id: 'cmd-add-bookmark', title: t('cmdAddBookmark'), subtitle: t('cmdAddBookmarkDesc'), action: 'ADD_BOOKMARK', icon: 'Bookmark' },
   { id: 'cmd-clear-cache', title: t('cmdClearCache'), subtitle: t('cmdClearCacheDesc'), action: 'CLEAR_CACHE', icon: 'Trash2' },
+  { id: 'cmd-clear-cookies', title: t('cmdClearCookies'), subtitle: t('cmdClearCookiesDesc'), action: 'CLEAR_COOKIES', icon: 'Trash2' },
   { id: 'cmd-downloads', title: t('cmdOpenDownloads'), subtitle: t('cmdOpenDownloadsDesc'), action: 'NEW_TAB', url: 'chrome://downloads', icon: 'Download' },
   { id: 'cmd-extensions', title: t('cmdOpenExtensions'), subtitle: t('cmdOpenExtensionsDesc'), action: 'NEW_TAB', url: 'chrome://extensions', icon: 'Puzzle' },
   { id: 'cmd-settings', title: t('cmdOpenSettings'), subtitle: t('cmdOpenSettingsDesc'), action: 'NEW_TAB', url: 'chrome://settings', icon: 'Settings' },

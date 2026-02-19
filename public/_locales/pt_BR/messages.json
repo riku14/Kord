@@ -99,10 +99,16 @@
     "message": "Adicionar a aba atual aos favoritos"
   },
   "cmdClearCache": {
-    "message": "Limpar Cache"
+    "message": "Limpar Cache e Atualizar"
   },
   "cmdClearCacheDesc": {
-    "message": "Limpar cache do navegador"
+    "message": "Limpar cache do navegador e recarregar a página"
+  },
+  "cmdClearCookies": {
+    "message": "Limpar Cookies e Atualizar"
+  },
+  "cmdClearCookiesDesc": {
+    "message": "Limpar cookies do navegador e recarregar a página"
   },
   "cmdOpenDownloads": {
     "message": "Abrir Downloads"

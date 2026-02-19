@@ -99,10 +99,16 @@
     "message": "現在のタブをブックマークする"
   },
   "cmdClearCache": {
-    "message": "キャッシュをクリア"
+    "message": "キャッシュクリア & リロード"
   },
   "cmdClearCacheDesc": {
-    "message": "ブラウザのキャッシュをクリアする"
+    "message": "ブラウザのキャッシュをクリアしてページを再読み込みする"
+  },
+  "cmdClearCookies": {
+    "message": "クッキークリア & リロード"
+  },
+  "cmdClearCookiesDesc": {
+    "message": "ブラウザのクッキーをクリアしてページを再読み込みする"
   },
   "cmdOpenDownloads": {
     "message": "ダウンロードを開く"

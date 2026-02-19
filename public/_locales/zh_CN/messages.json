@@ -99,10 +99,16 @@
     "message": "为当前标签页添加书签"
   },
   "cmdClearCache": {
-    "message": "清除缓存"
+    "message": "清除缓存并刷新"
   },
   "cmdClearCacheDesc": {
-    "message": "清除浏览器缓存"
+    "message": "清除浏览器缓存并重新加载页面"
+  },
+  "cmdClearCookies": {
+    "message": "清除 Cookie 并刷新"
+  },
+  "cmdClearCookiesDesc": {
+    "message": "清除浏览器 Cookie 并重新加载页面"
   },
   "cmdOpenDownloads": {
     "message": "打开下载"

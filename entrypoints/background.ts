@@ -88,7 +88,10 @@ async function handleMessage(message: MessageAction, sender: browser.Runtime.Mes
       return await addBookmark(message.title, message.url);
 
     case 'CLEAR_CACHE':
-      return await clearCache();
+      return await clearCacheAndRefresh(message.tabId);
+
+    case 'CLEAR_COOKIES':
+      return await clearCookiesAndRefresh(message.tabId);
 
     default:
       throw new Error(`Unknown message type: ${(message as any).type}`);
@@ -158,11 +161,29 @@ async function getHistory(query: string) {
 }
 
 /**
+ * 指定タブのコマンドパレットを閉じる
+ */
+async function closePaletteInTab(tabId: number) {
+  try {
+    await browser.tabs.sendMessage(tabId, { type: 'CLOSE_PALETTE' });
+  } catch {
+    // コンテンツスクリプトが読み込まれていない場合などは無視
+  }
+}
+
+/**
  * タブに切り替え
  */
 async function switchTab(tabId: number, windowId: number) {
+  const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const previousTabId = currentTab?.id;
+
   await browser.windows.update(windowId, { focused: true });
   await browser.tabs.update(tabId, { active: true });
+
+  if (previousTabId && previousTabId !== tabId) {
+    await closePaletteInTab(previousTabId);
+  }
   return { success: true };
 }
 
@@ -191,6 +212,8 @@ async function closeOtherTabs(keepTabId: number) {
  */
 async function duplicateTab(tabId: number) {
   await browser.tabs.duplicate(tabId);
+
+  await closePaletteInTab(tabId);
   return { success: true };
 }
 
@@ -214,15 +237,32 @@ async function muteTab(tabId: number, muted: boolean) {
  * 新しいタブを開く
  */
 async function newTab(url?: string) {
+  const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const previousTabId = currentTab?.id;
+
   await browser.tabs.create({ url });
+
+  if (previousTabId) {
+    await closePaletteInTab(previousTabId);
+  }
   return { success: true };
 }
 
 /**
- * キャッシュをクリア
+ * キャッシュをクリアしてリロード
  */
-async function clearCache() {
+async function clearCacheAndRefresh(tabId: number) {
   await browser.browsingData.removeCache({});
+  await browser.tabs.reload(tabId, { bypassCache: true });
+  return { success: true };
+}
+
+/**
+ * クッキーをクリアしてリロード
+ */
+async function clearCookiesAndRefresh(tabId: number) {
+  await browser.browsingData.removeCookies({});
+  await browser.tabs.reload(tabId, { bypassCache: false });
   return { success: true };
 }
 
@@ -281,7 +321,14 @@ async function getRecentlyClosed() {
  * セッションを復元
  */
 async function restoreSession(sessionId: string) {
+  const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const previousTabId = currentTab?.id;
+
   await browser.sessions.restore(sessionId);
+
+  if (previousTabId) {
+    await closePaletteInTab(previousTabId);
+  }
   return { success: true };
 }
 
