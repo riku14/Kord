@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import { t, getShortcutDisplay } from '../../lib/i18n';
+import { getShortcutDisplay } from '../../lib/i18n';
 import { getAnalyticsSummary } from '../../lib/analytics';
 import { shouldShowReviewPrompt, markAsReviewed, dismissReviewPrompt, openReviewPage } from '../../lib/review';
 
@@ -16,7 +16,6 @@ function App() {
         daysSinceInstall: summary.daysSinceInstall,
       });
 
-      // レビュープロンプトを表示すべきか判定
       const shouldShow = await shouldShowReviewPrompt(summary.totalUses);
       setShowReviewBanner(shouldShow);
     });
@@ -36,9 +35,9 @@ function App() {
   return (
     <div style={{ width: '320px', padding: '20px' }}>
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24px', marginBottom: '8px' }}>⚡ {t('popupTitle')}</h1>
+        <h1 style={{ fontSize: '24px', marginBottom: '8px' }}>⚡ QuickBar</h1>
         <p style={{ color: '#666', fontSize: '14px' }}>
-          {t('popupSubtitle')}
+          Lightning-fast command palette for Chrome
         </p>
       </div>
 
@@ -51,25 +50,25 @@ function App() {
         }}
       >
         <p style={{ fontSize: '14px', marginBottom: '8px' }}>
-          <strong>Press {shortcut}</strong> {t('popupOpenKord')}
+          <strong>Press {shortcut}</strong> to open QuickBar
         </p>
         <p style={{ fontSize: '12px', color: '#666' }}>
-          {t('popupDescription')}
+          Search tabs, bookmarks, history, and execute browser commands instantly.
         </p>
       </div>
 
       <div style={{ fontSize: '12px', color: '#666' }}>
-        <h3 style={{ fontSize: '14px', marginBottom: '8px', color: '#333' }}>{t('popupFeaturesTitle')}</h3>
+        <h3 style={{ fontSize: '14px', marginBottom: '8px', color: '#333' }}>Features:</h3>
         <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
-          <li>⚡ {t('popupFeature1')}</li>
-          <li>🔖 {t('popupFeature2')}</li>
-          <li>🕐 {t('popupFeature3')}</li>
-          <li>⌨️ {t('popupFeature4')}</li>
-          <li>🎯 {t('popupFeature5')}</li>
+          <li>⚡ Fast tab switching</li>
+          <li>🔖 Bookmark search</li>
+          <li>🕐 History search</li>
+          <li>⌨️ Browser commands</li>
+          <li>🎯 Frecency-based ranking</li>
         </ul>
 
         <p style={{ textAlign: 'center', fontSize: '11px', color: '#999' }}>
-          {t('popupFooter')}
+          Inspired by Arc Browser
         </p>
       </div>
 
@@ -85,10 +84,10 @@ function App() {
           }}
         >
           <h3 style={{ fontSize: '16px', marginBottom: '8px', fontWeight: 'bold' }}>
-            {t('reviewBannerTitle')}
+            Enjoying QuickBar?
           </h3>
           <p style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.9 }}>
-            {t('reviewBannerMessage')}
+            Help us grow! A quick 5-star review would mean the world.
           </p>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
             <button
@@ -111,7 +110,7 @@ function App() {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
-              {t('reviewBannerReview')}
+              Rate Us ⭐
             </button>
             <button
               onClick={handleDismiss}
@@ -132,7 +131,7 @@ function App() {
                 e.currentTarget.style.opacity = '1';
               }}
             >
-              {t('reviewBannerDismiss')}
+              Maybe Later
             </button>
           </div>
         </div>
@@ -151,10 +150,10 @@ function App() {
           }}
         >
           <p style={{ marginBottom: '4px' }}>
-            {t('statsUsed')}: <strong style={{ color: '#333' }}>{stats.totalUses}</strong> {t('statsTimes')}
+            Used: <strong style={{ color: '#333' }}>{stats.totalUses}</strong> times
           </p>
           <p>
-            {t('statsDays')}: <strong style={{ color: '#333' }}>{stats.daysSinceInstall}</strong>
+            Days active: <strong style={{ color: '#333' }}>{stats.daysSinceInstall}</strong>
           </p>
         </div>
       )}

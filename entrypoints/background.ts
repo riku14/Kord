@@ -3,8 +3,6 @@ import { isSafeUrl } from '../lib/security';
 import { runMigrations } from '../lib/migration';
 
 export default defineBackground(() => {
-  console.log('Kord background service worker started');
-
   // データ移行を実行（初回のみ）
   runMigrations();
 
@@ -15,8 +13,8 @@ export default defineBackground(() => {
       if (tab?.id) {
         try {
           await browser.tabs.sendMessage(tab.id, { type: 'TOGGLE_PALETTE' });
-        } catch (error) {
-          console.error('Failed to send message to content script:', error);
+        } catch {
+          // コンテンツスクリプトが未ロードの場合は無視
         }
       }
     }
@@ -27,7 +25,6 @@ export default defineBackground(() => {
     handleMessage(message, sender)
       .then(sendResponse)
       .catch((error) => {
-        console.error('Error handling message:', error);
         sendResponse({ error: error.message });
       });
     return true; // 非同期レスポンスを許可

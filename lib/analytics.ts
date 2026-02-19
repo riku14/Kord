@@ -49,8 +49,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       return defaultData;
     }
     return result[STORAGE_KEY];
-  } catch (error) {
-    console.error('Failed to get analytics data:', error);
+  } catch {
     return createDefaultAnalytics();
   }
 }
@@ -69,8 +68,8 @@ export async function recordAction(
     data.lastUsedAt = Date.now();
 
     await chrome.storage.local.set({ [STORAGE_KEY]: data });
-  } catch (error) {
-    console.error('Failed to record action:', error);
+  } catch {
+    // 無視
   }
 }
 

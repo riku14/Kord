@@ -30,11 +30,7 @@ export async function runMigrations(): Promise<void> {
 
     await chrome.storage.local.set({ [MIGRATION_FLAG_KEY]: true });
 
-    if (migratedCount > 0) {
-      console.log(`Kord: Migration completed. Migrated ${migratedCount} storage keys.`);
-    }
-  } catch (error) {
-    console.error('Kord: Migration failed, but extension will continue:', error);
-    // 移行失敗しても拡張機能は動作続行（新規インストール扱い）
+  } catch {
+    // 移行失敗しても拡張機能は動作続行
   }
 }

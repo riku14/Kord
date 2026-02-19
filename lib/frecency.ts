@@ -37,10 +37,6 @@ async function cleanupOldRecords(data: FrecencyData): Promise<FrecencyData> {
     }
   }
 
-  if (removedCount > 0) {
-    console.log(`Kord: Cleaned up ${removedCount} old frecency records`);
-  }
-
   return cleaned;
 }
 
@@ -63,8 +59,8 @@ async function shouldCleanup(): Promise<boolean> {
 async function updateCleanupTimestamp(): Promise<void> {
   try {
     await chrome.storage.local.set({ [CLEANUP_TIMESTAMP_KEY]: Date.now() });
-  } catch (error) {
-    console.error('Failed to update cleanup timestamp:', error);
+  } catch {
+    // 無視
   }
 }
 
@@ -94,8 +90,8 @@ export async function recordUsage(id: string): Promise<void> {
     }
 
     await chrome.storage.local.set({ [STORAGE_KEY]: data });
-  } catch (error) {
-    console.error('Failed to record usage:', error);
+  } catch {
+    // 無視
   }
 }
 
@@ -106,8 +102,7 @@ export async function getFrecencyData(): Promise<FrecencyData> {
   try {
     const result = await chrome.storage.local.get(STORAGE_KEY);
     return result[STORAGE_KEY] || {};
-  } catch (error) {
-    console.error('Failed to get frecency data:', error);
+  } catch {
     return {};
   }
 }

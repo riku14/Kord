@@ -30,7 +30,6 @@ import { recordUsage, getFrecencyData, calculateFrecencyScore } from '../../lib/
 import { getCommands } from '../../lib/constants';
 import type { SearchResult, ResultType } from '../../lib/types';
 import { getExtensionOrigin, isSafeUrl } from '../../lib/security';
-import { t } from '../../lib/i18n';
 import { recordAction } from '../../lib/analytics';
 
 // アイコンマッピング
@@ -57,11 +56,13 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 function App() {
+
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isComposing, setIsComposing] = useState(false);
   const [mode, setMode] = useState<'search' | 'command' | 'folder-select'>('search');
+  const [paletteShownCount, setpaletteShownCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [pendingBookmark, setPendingBookmark] = useState<{ title: string; url: string } | null>(null);
   const [folderCreateParent, setFolderCreateParent] = useState<{ id: string; title: string } | null>(null);
@@ -106,6 +107,8 @@ function App() {
         setTimeout(() => {
           inputRef.current?.focus();
         }, 50);
+        // 検索を再実行するためにカウンターを更新
+        setpaletteShownCount(c => c + 1);
       } else if (e.data?.type === 'PALETTE_HIDDEN') {
         // 状態をリセット
         setQuery('');
@@ -166,8 +169,8 @@ function App() {
           if (window.top && window.top !== window) {
             window.top.postMessage({ type: 'CLOSE_PALETTE' }, '*');
           }
-        } catch (err) {
-          console.error('Failed to close palette:', err);
+        } catch {
+          // 無視
         }
       }
     };
@@ -230,8 +233,8 @@ function App() {
               folderCreateParentRef.current = null;
               setMode('search');
               closePalette();
-            } catch (err) {
-              console.error('Failed to create folder:', err);
+            } catch {
+              // 無視
             }
           })();
           return;
@@ -284,8 +287,8 @@ function App() {
 
     const runSearch = () => performSearch(query);
 
-    if (modeChanged) {
-      // Tab切り替え時は即時実行（遅延なし）
+    if (modeChanged || paletteShownCount > 0) {
+      // モード切り替え時・パレット表示時は即時実行（遅延なし）
       runSearch();
       return;
     }
@@ -293,7 +296,7 @@ function App() {
     // 入力時は300msデバウンス
     const searchTimeout = setTimeout(runSearch, 300);
     return () => clearTimeout(searchTimeout);
-  }, [query, mode]);
+  }, [query, mode, paletteShownCount]);
 
   /**
    * 統合検索を実行
@@ -309,8 +312,8 @@ function App() {
       const newFolderItem: SearchResult = {
         id: 'new-folder',
         type: 'command',
-        title: t('newFolder'),
-        subtitle: t('newFolderDesc'),
+        title: 'New Folder',
+        subtitle: 'Create a new bookmark folder',
         action: 'NEW_BOOKMARK_FOLDER',
         icon: 'FolderPlus',
         score: 0,
@@ -471,9 +474,8 @@ function App() {
       const suggestions = data[1]?.slice(0, 4) || []; // 最大4件の候補を取得
       // 入力されたクエリを先頭に追加
       return [query, ...suggestions.filter((s: string) => s !== query)];
-    } catch (error) {
-      console.error('Failed to fetch Google suggestions:', error);
-      return [query]; // エラー時は元のクエリを返す
+    } catch {
+      return [query];
     }
   };
 
@@ -547,7 +549,6 @@ function App() {
 
       closePalette();
     } catch (error) {
-      console.error('Failed to execute result:', error);
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
       // 3秒後にエラーメッセージをクリア
       setTimeout(() => setError(null), 3000);
@@ -679,7 +680,6 @@ function App() {
         }
       }
     } catch (error) {
-      console.error('Failed to execute command:', error);
       setError(error instanceof Error ? error.message : 'Command execution failed');
       setTimeout(() => setError(null), 3000);
     }
@@ -703,8 +703,8 @@ function App() {
         { type: 'CLOSE_PALETTE' },
         getExtensionOrigin()
       );
-    } catch (error) {
-      console.error('Failed to close palette:', error);
+    } catch {
+      // 無視
     }
   };
 
@@ -740,17 +740,17 @@ function App() {
   const getActionText = (type: ResultType): string => {
     switch (type) {
       case 'tab':
-        return t('actionSwitchTab');
+        return 'Switch to Tab';
       case 'bookmark':
-        return t('actionOpen');
+        return 'Open';
       case 'history':
-        return t('actionOpenNewTab');
+        return 'Open in New Tab';
       case 'command':
-        return '';  // コマンドはショートカットキーを表示
+        return '';
       case 'search':
-        return t('actionSearchGoogle');
+        return 'Search Google';
       case 'session':
-        return t('actionRestoreSession');
+        return 'Restore Session';
       case 'bookmark-folder':
         return '';
     }
@@ -785,8 +785,8 @@ function App() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
               mode === 'folder-select'
-                ? (folderCreateParent ? t('newFolderPlaceholder') : t('folderSearchPlaceholder'))
-                : mode === 'search' ? t('searchPlaceholder') : t('commandPlaceholder')
+                ? (folderCreateParent ? 'Enter folder name...' : 'Search folders...')
+                : mode === 'search' ? 'Search tabs, bookmarks, history...' : 'Search commands...'
             }
             className="search-input"
             autoComplete="off"
@@ -797,7 +797,7 @@ function App() {
         {folderCreateParent && (
           <div className="folder-create-banner">
             <FolderPlus size={14} />
-            <span>{t('creatingFolderIn')}: {folderCreateParent.title}</span>
+            <span>Creating folder in: {folderCreateParent.title}</span>
           </div>
         )}
       </div>
@@ -809,7 +809,7 @@ function App() {
             <div className="empty-icon">
               <Search size={32} strokeWidth={2} color="white" />
             </div>
-            <p className="empty-title">{t('noResults')}</p>
+            <p className="empty-title">No results found</p>
           </div>
         )}
 
@@ -822,12 +822,16 @@ function App() {
                 <Zap size={32} strokeWidth={2} color="white" />
               )}
             </div>
-            <p className="empty-title">{mode === 'search' ? t('emptySearchMode') : t('emptyCommandMode')}</p>
+            <p className="empty-title">{mode === 'search' ? 'Search Mode' : 'Command Mode'}</p>
             <p className="empty-subtitle">
-              {mode === 'search' ? t('emptySearchModeDesc') : t('emptyCommandModeDesc')}
+              {mode === 'search'
+                ? 'Start typing to search tabs, bookmarks, and history'
+                : 'Start typing to search commands'}
             </p>
             <p className="empty-hint">
-              {mode === 'search' ? t('hintSwitchCommand') : t('hintSwitchSearch')}
+              {mode === 'search'
+                ? 'Press Tab to switch to Command Mode'
+                : 'Press Tab to switch to Search Mode'}
             </p>
           </div>
         )}

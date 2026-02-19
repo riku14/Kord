@@ -3,8 +3,6 @@ import { isValidMessageOrigin } from '../lib/security';
 export default defineContentScript({
   matches: ['<all_urls>'],
   main() {
-    console.log('Kord content script loaded');
-
     let paletteRoot: HTMLDivElement | null = null;
     let isVisible = false;
 
@@ -107,8 +105,8 @@ export default defineContentScript({
 
               iframe.style.height = `${finalHeight}px`;
             }
-          } catch (e) {
-            console.error('Failed to adjust iframe height:', e);
+          } catch {
+            // cross-originエラーは無視
           }
         };
 
@@ -200,7 +198,6 @@ export default defineContentScript({
     function handlePaletteMessage(e: MessageEvent) {
       // Origin検証を追加
       if (!isValidMessageOrigin(e.origin)) {
-        console.warn('Kord: Rejected message from untrusted origin:', e.origin);
         return;
       }
 

@@ -40,8 +40,7 @@ async function getReviewState(): Promise<ReviewState> {
       return defaultState;
     }
     return result[STORAGE_KEY];
-  } catch (error) {
-    console.error('Failed to get review state:', error);
+  } catch {
     return createDefaultReviewState();
   }
 }
@@ -52,8 +51,8 @@ async function getReviewState(): Promise<ReviewState> {
 async function saveReviewState(state: ReviewState): Promise<void> {
   try {
     await chrome.storage.local.set({ [STORAGE_KEY]: state });
-  } catch (error) {
-    console.error('Failed to save review state:', error);
+  } catch {
+    // 無視
   }
 }
 
