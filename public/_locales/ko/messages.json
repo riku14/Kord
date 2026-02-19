@@ -193,5 +193,53 @@
   },
   "reviewBannerDismiss": {
     "message": "나중에"
+  },
+  "emptySearchMode": {
+    "message": "검색 모드"
+  },
+  "emptySearchModeDesc": {
+    "message": "탭, 북마크, 기록을 검색하려면 입력하세요"
+  },
+  "emptyCommandMode": {
+    "message": "명령 모드"
+  },
+  "emptyCommandModeDesc": {
+    "message": "명령을 검색하려면 입력하세요"
+  },
+  "hintSwitchCommand": {
+    "message": "Tab을 눌러 명령 모드로 전환"
+  },
+  "hintSwitchSearch": {
+    "message": "Tab을 눌러 검색 모드로 전환"
+  },
+  "actionSwitchTab": {
+    "message": "탭으로 전환"
+  },
+  "actionOpen": {
+    "message": "열기"
+  },
+  "actionOpenNewTab": {
+    "message": "새 탭에서 열기"
+  },
+  "actionSearchGoogle": {
+    "message": "Google 검색"
+  },
+  "actionRestoreSession": {
+    "message": "세션 복원"
+  },
+  "folderSearchPlaceholder": {
+    "message": "폴더 검색..."
+  },
+  "newFolderPlaceholder": {
+    "message": "폴더 이름 입력..."
+  },
+  "newFolder": {
+    "message": "새 폴더"
+  },
+  "newFolderDesc": {
+    "message": "새 북마크 폴더 만들기"
+  },
+  "creatingFolderIn": {
+    "message": "폴더 생성 위치"
   }
 }

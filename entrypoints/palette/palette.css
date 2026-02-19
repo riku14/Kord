@@ -384,6 +384,18 @@ body {
   transform: translateX(4px);
 }
 
+/* フォルダ作成バナー */
+.folder-create-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 18px;
+  font-size: 12px;
+  color: var(--qb-accent);
+  background: rgba(59, 130, 246, 0.06);
+  border-bottom: 1px solid var(--qb-border);
+}
+
 /* エラー通知 */
 .error-notification {
   position: absolute;

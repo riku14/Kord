@@ -193,5 +193,53 @@
   },
   "reviewBannerDismiss": {
     "message": "Talvez mais tarde"
+  },
+  "emptySearchMode": {
+    "message": "Modo de Busca"
+  },
+  "emptySearchModeDesc": {
+    "message": "Digite para buscar abas, favoritos e histórico"
+  },
+  "emptyCommandMode": {
+    "message": "Modo de Comando"
+  },
+  "emptyCommandModeDesc": {
+    "message": "Digite para buscar comandos"
+  },
+  "hintSwitchCommand": {
+    "message": "Pressione Tab para mudar para o Modo de Comando"
+  },
+  "hintSwitchSearch": {
+    "message": "Pressione Tab para mudar para o Modo de Busca"
+  },
+  "actionSwitchTab": {
+    "message": "Mudar para Aba"
+  },
+  "actionOpen": {
+    "message": "Abrir"
+  },
+  "actionOpenNewTab": {
+    "message": "Abrir em Nova Aba"
+  },
+  "actionSearchGoogle": {
+    "message": "Pesquisar no Google"
+  },
+  "actionRestoreSession": {
+    "message": "Restaurar Sessão"
+  },
+  "folderSearchPlaceholder": {
+    "message": "Pesquisar pastas..."
+  },
+  "newFolderPlaceholder": {
+    "message": "Digite o nome da pasta..."
+  },
+  "newFolder": {
+    "message": "Nova Pasta"
+  },
+  "newFolderDesc": {
+    "message": "Criar uma nova pasta de favoritos"
+  },
+  "creatingFolderIn": {
+    "message": "Criando pasta em"
   }
 }

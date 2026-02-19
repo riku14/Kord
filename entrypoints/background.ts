@@ -85,7 +85,13 @@ async function handleMessage(message: MessageAction, sender: browser.Runtime.Mes
       return await restoreSession(message.sessionId);
 
     case 'ADD_BOOKMARK':
-      return await addBookmark(message.title, message.url);
+      return await addBookmark(message.title, message.url, message.parentId);
+
+    case 'GET_BOOKMARK_FOLDERS':
+      return await getBookmarkFolders();
+
+    case 'CREATE_BOOKMARK_FOLDER':
+      return await createBookmarkFolder(message.name, message.parentId);
 
     case 'CLEAR_CACHE':
       return await clearCacheAndRefresh(message.tabId);
@@ -335,7 +341,39 @@ async function restoreSession(sessionId: string) {
 /**
  * ブックマークを追加
  */
-async function addBookmark(title: string, url: string) {
-  await browser.bookmarks.create({ title, url });
+async function addBookmark(title: string, url: string, parentId?: string) {
+  await browser.bookmarks.create({ title, url, ...(parentId ? { parentId } : {}) });
   return { success: true };
+}
+
+/**
+ * ブックマークフォルダ一覧を取得（フラット化、深さ付き）
+ */
+async function getBookmarkFolders() {
+  const tree = await browser.bookmarks.getTree();
+  const folders: { id: string; title: string; depth: number }[] = [];
+
+  function traverse(nodes: browser.bookmarks.BookmarkTreeNode[], depth: number) {
+    for (const node of nodes) {
+      // ルートノード（id="0"）と URL を持つノード（ブックマーク）を除外
+      if (node.id !== '0' && !node.url && node.title) {
+        folders.push({ id: node.id, title: node.title, depth });
+      }
+      if (node.children) {
+        // ルートの直下（depth=0）の子をdepth=0として扱う
+        traverse(node.children, node.id === '0' ? 0 : depth + 1);
+      }
+    }
+  }
+
+  traverse(tree, 0);
+  return folders;
+}
+
+/**
+ * ブックマークフォルダを作成
+ */
+async function createBookmarkFolder(name: string, parentId: string) {
+  const folder = await browser.bookmarks.create({ title: name, parentId });
+  return { success: true, folderId: folder.id };
 }

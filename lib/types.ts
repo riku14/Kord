@@ -1,4 +1,4 @@
-export type ResultType = 'tab' | 'bookmark' | 'history' | 'command' | 'search' | 'session';
+export type ResultType = 'tab' | 'bookmark' | 'history' | 'command' | 'search' | 'session' | 'bookmark-folder';
 
 export interface SearchResult {
   id: string;
@@ -17,6 +17,9 @@ export interface SearchResult {
   icon?: string;
   // セッション用
   sessionId?: string;
+  // ブックマークフォルダ用
+  folderId?: string;
+  depth?: number;
 }
 
 export interface CommandDefinition {
@@ -46,6 +49,8 @@ export type MessageAction =
   | { type: 'RELOAD_TAB'; tabId: number; bypassCache?: boolean }
   | { type: 'GET_RECENTLY_CLOSED' }
   | { type: 'RESTORE_SESSION'; sessionId: string }
-  | { type: 'ADD_BOOKMARK'; title: string; url: string }
+  | { type: 'ADD_BOOKMARK'; title: string; url: string; parentId?: string }
+  | { type: 'GET_BOOKMARK_FOLDERS' }
+  | { type: 'CREATE_BOOKMARK_FOLDER'; name: string; parentId: string }
   | { type: 'CLEAR_CACHE'; tabId: number }
   | { type: 'CLEAR_COOKIES'; tabId: number };

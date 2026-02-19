@@ -193,5 +193,53 @@
   },
   "reviewBannerDismiss": {
     "message": "Maybe Later"
+  },
+  "emptySearchMode": {
+    "message": "Search Mode"
+  },
+  "emptySearchModeDesc": {
+    "message": "Start typing to search tabs, bookmarks, and history"
+  },
+  "emptyCommandMode": {
+    "message": "Command Mode"
+  },
+  "emptyCommandModeDesc": {
+    "message": "Start typing to search commands"
+  },
+  "hintSwitchCommand": {
+    "message": "Press Tab to switch to Command Mode"
+  },
+  "hintSwitchSearch": {
+    "message": "Press Tab to switch to Search Mode"
+  },
+  "actionSwitchTab": {
+    "message": "Switch to Tab"
+  },
+  "actionOpen": {
+    "message": "Open"
+  },
+  "actionOpenNewTab": {
+    "message": "Open in New Tab"
+  },
+  "actionSearchGoogle": {
+    "message": "Search Google"
+  },
+  "actionRestoreSession": {
+    "message": "Restore Session"
+  },
+  "folderSearchPlaceholder": {
+    "message": "Search folders..."
+  },
+  "newFolderPlaceholder": {
+    "message": "Enter folder name..."
+  },
+  "newFolder": {
+    "message": "New Folder"
+  },
+  "newFolderDesc": {
+    "message": "Create a new bookmark folder"
+  },
+  "creatingFolderIn": {
+    "message": "Creating folder in"
   }
 }

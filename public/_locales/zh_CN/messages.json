@@ -193,5 +193,53 @@
   },
   "reviewBannerDismiss": {
     "message": "稍后"
+  },
+  "emptySearchMode": {
+    "message": "搜索模式"
+  },
+  "emptySearchModeDesc": {
+    "message": "开始输入以搜索标签页、书签和历史记录"
+  },
+  "emptyCommandMode": {
+    "message": "命令模式"
+  },
+  "emptyCommandModeDesc": {
+    "message": "开始输入以搜索命令"
+  },
+  "hintSwitchCommand": {
+    "message": "按 Tab 切换到命令模式"
+  },
+  "hintSwitchSearch": {
+    "message": "按 Tab 切换到搜索模式"
+  },
+  "actionSwitchTab": {
+    "message": "切换到标签页"
+  },
+  "actionOpen": {
+    "message": "打开"
+  },
+  "actionOpenNewTab": {
+    "message": "在新标签页中打开"
+  },
+  "actionSearchGoogle": {
+    "message": "Google搜索"
+  },
+  "actionRestoreSession": {
+    "message": "恢复会话"
+  },
+  "folderSearchPlaceholder": {
+    "message": "搜索文件夹..."
+  },
+  "newFolderPlaceholder": {
+    "message": "输入文件夹名称..."
+  },
+  "newFolder": {
+    "message": "新建文件夹"
+  },
+  "newFolderDesc": {
+    "message": "创建新书签文件夹"
+  },
+  "creatingFolderIn": {
+    "message": "在以下位置创建文件夹"
   }
 }

@@ -193,5 +193,53 @@
   },
   "reviewBannerDismiss": {
     "message": "後で"
+  },
+  "emptySearchMode": {
+    "message": "検索モード"
+  },
+  "emptySearchModeDesc": {
+    "message": "タブ、ブックマーク、履歴を検索するには入力してください"
+  },
+  "emptyCommandMode": {
+    "message": "コマンドモード"
+  },
+  "emptyCommandModeDesc": {
+    "message": "コマンドを検索するには入力してください"
+  },
+  "hintSwitchCommand": {
+    "message": "Tabキーでコマンドモードに切り替え"
+  },
+  "hintSwitchSearch": {
+    "message": "Tabキーで検索モードに切り替え"
+  },
+  "actionSwitchTab": {
+    "message": "タブに切り替え"
+  },
+  "actionOpen": {
+    "message": "開く"
+  },
+  "actionOpenNewTab": {
+    "message": "新しいタブで開く"
+  },
+  "actionSearchGoogle": {
+    "message": "Googleで検索"
+  },
+  "actionRestoreSession": {
+    "message": "セッションを復元"
+  },
+  "folderSearchPlaceholder": {
+    "message": "フォルダを検索..."
+  },
+  "newFolderPlaceholder": {
+    "message": "フォルダ名を入力..."
+  },
+  "newFolder": {
+    "message": "新しいフォルダ"
+  },
+  "newFolderDesc": {
+    "message": "新しいブックマークフォルダを作成"
+  },
+  "creatingFolderIn": {
+    "message": "フォルダを作成先"
   }
 }

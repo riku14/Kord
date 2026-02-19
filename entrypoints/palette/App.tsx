@@ -21,11 +21,13 @@ import {
   Settings,
   BookMarked,
   ChevronRight,
+  Folder,
+  FolderPlus,
   type LucideIcon
 } from 'lucide-react';
 import { fuzzyMatchMultiple } from '../../lib/fuzzy';
 import { recordUsage, getFrecencyData, calculateFrecencyScore } from '../../lib/frecency';
-import { COMMANDS } from '../../lib/constants';
+import { getCommands } from '../../lib/constants';
 import type { SearchResult, ResultType } from '../../lib/types';
 import { getExtensionOrigin, isSafeUrl } from '../../lib/security';
 import { t } from '../../lib/i18n';
@@ -50,6 +52,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Settings,
   History,
   BookMarked,
+  Folder,
+  FolderPlus,
 };
 
 function App() {
@@ -57,11 +61,21 @@ function App() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isComposing, setIsComposing] = useState(false);
-  const [mode, setMode] = useState<'search' | 'command'>('search');
+  const [mode, setMode] = useState<'search' | 'command' | 'folder-select'>('search');
   const [error, setError] = useState<string | null>(null);
+  const [pendingBookmark, setPendingBookmark] = useState<{ title: string; url: string } | null>(null);
+  const [folderCreateParent, setFolderCreateParent] = useState<{ id: string; title: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const prevModeRef = useRef(mode);
+  const folderCreateParentRef = useRef<{ id: string; title: string } | null>(null);
+  const pendingBookmarkRef = useRef<{ title: string; url: string } | null>(null);
+  const queryRef = useRef(query);
+
+  // queryRef を常に最新の query に同期
+  useEffect(() => {
+    queryRef.current = query;
+  }, [query]);
 
   // 初期化: オートフォーカス（複数回試行）
   useEffect(() => {
@@ -98,6 +112,10 @@ function App() {
         setSelectedIndex(0);
         setMode('search');
         setError(null);
+        setPendingBookmark(null);
+        pendingBookmarkRef.current = null;
+        setFolderCreateParent(null);
+        folderCreateParentRef.current = null;
       }
     };
 
@@ -126,6 +144,17 @@ function App() {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
+        // 新規フォルダ作成モード中はフォルダ選択に戻る（パレットは閉じない）
+        if (folderCreateParentRef.current) {
+          setFolderCreateParent(null);
+          folderCreateParentRef.current = null;
+          setQuery('');
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          return;
+        }
+
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -159,13 +188,56 @@ function App() {
         // IME入力中はスキップ
         if (isComposing) return;
         e.preventDefault();
-        setMode((prev) => prev === 'search' ? 'command' : 'search');
+        if (mode === 'folder-select') {
+          // フォルダ選択をキャンセルしてコマンドモードへ戻る
+          setPendingBookmark(null);
+          pendingBookmarkRef.current = null;
+          setFolderCreateParent(null);
+          folderCreateParentRef.current = null;
+          setMode('command');
+          setQuery('');
+        } else {
+          setMode((prev) => prev === 'search' ? 'command' : 'search');
+        }
         setSelectedIndex(0);
-      } else if (e.key === 'Enter' && results.length > 0) {
+      } else if (e.key === 'Enter') {
         // IME入力中は無視
         if (isComposing) return;
         e.preventDefault();
-        if (results[selectedIndex]) {
+
+        // 新規フォルダ作成モード: フォルダを作成してブックマーク保存
+        if (folderCreateParentRef.current) {
+          const folderName = queryRef.current.trim();
+          if (!folderName) return;
+          (async () => {
+            try {
+              const { folderId } = await browser.runtime.sendMessage({
+                type: 'CREATE_BOOKMARK_FOLDER',
+                name: folderName,
+                parentId: folderCreateParentRef.current!.id,
+              });
+              if (pendingBookmarkRef.current) {
+                await browser.runtime.sendMessage({
+                  type: 'ADD_BOOKMARK',
+                  title: pendingBookmarkRef.current.title,
+                  url: pendingBookmarkRef.current.url,
+                  parentId: folderId,
+                });
+              }
+              setPendingBookmark(null);
+              pendingBookmarkRef.current = null;
+              setFolderCreateParent(null);
+              folderCreateParentRef.current = null;
+              setMode('search');
+              closePalette();
+            } catch (err) {
+              console.error('Failed to create folder:', err);
+            }
+          })();
+          return;
+        }
+
+        if (results.length > 0 && results[selectedIndex]) {
           executeResult(results[selectedIndex]);
         }
       }
@@ -230,11 +302,39 @@ function App() {
     const trimmedQuery = searchQuery.trim();
     let allResults: SearchResult[] = [];
 
+    // フォルダ選択モード
+    if (mode === 'folder-select') {
+      if (folderCreateParent) return; // フォルダ名入力中は検索しない
+      const allFolders: { id: string; title: string; depth: number }[] = await browser.runtime.sendMessage({ type: 'GET_BOOKMARK_FOLDERS' });
+      const newFolderItem: SearchResult = {
+        id: 'new-folder',
+        type: 'command',
+        title: t('newFolder'),
+        subtitle: t('newFolderDesc'),
+        action: 'NEW_BOOKMARK_FOLDER',
+        icon: 'FolderPlus',
+        score: 0,
+      };
+      const folderResults: SearchResult[] = allFolders
+        .filter(f => !trimmedQuery || f.title.toLowerCase().includes(trimmedQuery.toLowerCase()))
+        .map(f => ({
+          id: `folder-${f.id}`,
+          folderId: f.id,
+          type: 'bookmark-folder' as ResultType,
+          title: f.title,
+          depth: f.depth,
+          score: 0,
+        }));
+      setResults([newFolderItem, ...folderResults.slice(0, 11)]);
+      setSelectedIndex(0);
+      return;
+    }
+
     // コマンドモードの場合
     if (mode === 'command') {
       if (!trimmedQuery) {
         // 空のクエリ: 全コマンドを表示
-        allResults = COMMANDS.map((cmd) => ({
+        allResults = getCommands().map((cmd) => ({
           id: cmd.id,
           type: 'command' as ResultType,
           title: cmd.title,
@@ -333,7 +433,7 @@ function App() {
   };
 
   const searchCommands = (query: string): SearchResult[] => {
-    return COMMANDS.map((cmd) => {
+    return getCommands().map((cmd) => {
       const fuzzyScore = fuzzyMatchMultiple(query, [cmd.title, cmd.subtitle]).score;
       return {
         id: cmd.id,
@@ -423,10 +523,26 @@ function App() {
           }
           break;
 
-        case 'command':
-          await executeCommand(result);
-          await recordAction('commandExecute');
+        case 'bookmark-folder':
+          if (pendingBookmark && result.folderId) {
+            await browser.runtime.sendMessage({
+              type: 'ADD_BOOKMARK',
+              title: pendingBookmark.title,
+              url: pendingBookmark.url,
+              parentId: result.folderId,
+            });
+            setPendingBookmark(null);
+            pendingBookmarkRef.current = null;
+            setMode('search');
+          }
           break;
+
+        case 'command': {
+          const shouldClose = await executeCommand(result);
+          await recordAction('commandExecute');
+          if (shouldClose === false) return;
+          break;
+        }
       }
 
       closePalette();
@@ -438,7 +554,7 @@ function App() {
     }
   };
 
-  const executeCommand = async (result: SearchResult) => {
+  const executeCommand = async (result: SearchResult): Promise<false | void> => {
     try {
       const action = result.action;
       if (!action) return;
@@ -526,16 +642,25 @@ function App() {
           setResults(sessionResults.slice(0, 12));
           break;
 
-        case 'ADD_BOOKMARK':
+        case 'ADD_BOOKMARK': {
           const [bookmarkTab] = await browser.tabs.query({ active: true, currentWindow: true });
           if (bookmarkTab?.url && bookmarkTab?.title) {
-            await browser.runtime.sendMessage({
-              type: 'ADD_BOOKMARK',
-              title: bookmarkTab.title,
-              url: bookmarkTab.url
-            });
+            setPendingBookmark({ title: bookmarkTab.title, url: bookmarkTab.url });
+            pendingBookmarkRef.current = { title: bookmarkTab.title, url: bookmarkTab.url };
+            setMode('folder-select');
+            setQuery('');
+            setFolderCreateParent(null);
+            folderCreateParentRef.current = null;
           }
-          break;
+          return false;
+        }
+
+        case 'NEW_BOOKMARK_FOLDER': {
+          setFolderCreateParent({ id: '2', title: 'Other Bookmarks' });
+          folderCreateParentRef.current = { id: '2', title: 'Other Bookmarks' };
+          setQuery('');
+          return false;
+        }
 
         case 'CLEAR_CACHE': {
           const [cacheTab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -568,6 +693,10 @@ function App() {
       setSelectedIndex(0);
       setMode('search');
       setError(null);
+      setPendingBookmark(null);
+      pendingBookmarkRef.current = null;
+      setFolderCreateParent(null);
+      folderCreateParentRef.current = null;
 
       // 拡張機能のオリジンを明示的に指定
       window.parent.postMessage(
@@ -603,23 +732,27 @@ function App() {
         return <Search size={iconSize} strokeWidth={iconStrokeWidth} />;
       case 'session':
         return <RotateCcw size={iconSize} strokeWidth={iconStrokeWidth} />;
+      case 'bookmark-folder':
+        return <Folder size={iconSize} strokeWidth={iconStrokeWidth} />;
     }
   };
 
   const getActionText = (type: ResultType): string => {
     switch (type) {
       case 'tab':
-        return 'Switch to Tab';
+        return t('actionSwitchTab');
       case 'bookmark':
-        return 'Open';
+        return t('actionOpen');
       case 'history':
-        return 'Open in New Tab';
+        return t('actionOpenNewTab');
       case 'command':
         return '';  // コマンドはショートカットキーを表示
       case 'search':
-        return 'Search Google';
+        return t('actionSearchGoogle');
       case 'session':
-        return 'Restore Session';
+        return t('actionRestoreSession');
+      case 'bookmark-folder':
+        return '';
     }
   };
 
@@ -637,7 +770,9 @@ function App() {
       <div className="search-container">
         <div className="search-wrapper">
           <div className="search-icon">
-            {mode === 'search' ? (
+            {mode === 'folder-select' ? (
+              <Folder size={18} strokeWidth={2.5} color="white" />
+            ) : mode === 'search' ? (
               <Search size={18} strokeWidth={2.5} color="white" />
             ) : (
               <Zap size={18} strokeWidth={2.5} color="white" />
@@ -648,13 +783,23 @@ function App() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={mode === 'search' ? t('searchPlaceholder') : t('commandPlaceholder')}
+            placeholder={
+              mode === 'folder-select'
+                ? (folderCreateParent ? t('newFolderPlaceholder') : t('folderSearchPlaceholder'))
+                : mode === 'search' ? t('searchPlaceholder') : t('commandPlaceholder')
+            }
             className="search-input"
             autoComplete="off"
             spellCheck="false"
           />
           <kbd className="search-hint">ESC</kbd>
         </div>
+        {folderCreateParent && (
+          <div className="folder-create-banner">
+            <FolderPlus size={14} />
+            <span>{t('creatingFolderIn')}: {folderCreateParent.title}</span>
+          </div>
+        )}
       </div>
 
       {/* 結果リスト */}
@@ -677,14 +822,12 @@ function App() {
                 <Zap size={32} strokeWidth={2} color="white" />
               )}
             </div>
-            <p className="empty-title">{mode === 'search' ? 'Search Mode' : 'Command Mode'}</p>
+            <p className="empty-title">{mode === 'search' ? t('emptySearchMode') : t('emptyCommandMode')}</p>
             <p className="empty-subtitle">
-              {mode === 'search'
-                ? 'Start typing to search tabs, bookmarks, and history'
-                : 'Start typing to search commands'}
+              {mode === 'search' ? t('emptySearchModeDesc') : t('emptyCommandModeDesc')}
             </p>
             <p className="empty-hint">
-              Press <kbd>Tab</kbd> to switch to {mode === 'search' ? 'Command Mode' : 'Search Mode'}
+              {mode === 'search' ? t('hintSwitchCommand') : t('hintSwitchSearch')}
             </p>
           </div>
         )}
@@ -694,6 +837,7 @@ function App() {
             key={result.id}
             onClick={() => executeResult(result)}
             className={`result-item ${index === selectedIndex ? 'selected' : ''}`}
+            style={result.type === 'bookmark-folder' && result.depth ? { paddingLeft: `calc(14px + ${result.depth} * 16px)` } : undefined}
           >
             <div className="result-icon">
               {result.favicon && result.type !== 'command' && isSafeUrl(result.favicon) ? (
