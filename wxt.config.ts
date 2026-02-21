@@ -5,7 +5,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: 'Kord - Command Palette & Tab Manager for Chrome',
-    description: 'Lightning-fast command palette for Chrome. Search tabs, bookmarks, history instantly with Arc Browser-inspired design and frecency ranking.',
+    description: 'Lightning-fast command palette for Chrome. Search tabs, bookmarks, history instantly. Arc-inspired design with frecency ranking.',
     default_locale: 'en',
     homepage_url: 'https://github.com/riku14/Kord',
     permissions: [

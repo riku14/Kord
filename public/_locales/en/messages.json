@@ -3,7 +3,7 @@
     "message": "Kord - Command Palette & Tab Manager for Chrome"
   },
   "extDescription": {
-    "message": "Lightning-fast command palette for Chrome. Search tabs, bookmarks, history instantly with Arc Browser-inspired design and frecency ranking."
+    "message": "Lightning-fast command palette for Chrome. Search tabs, bookmarks, history instantly. Arc-inspired design with frecency ranking."
   },
   "searchPlaceholder": {
     "message": "Search tabs, bookmarks, history..."
