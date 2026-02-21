@@ -27,12 +27,7 @@ Kord stores the following data locally on your device:
 - **Content**: A single timestamp value
 - **Location**: Chrome's local storage (chrome.storage.local)
 
-### 3. Migration Flag (`kord_migration_completed`)
-- **Purpose**: Ensure data migration from QuickBar to Kord only runs once
-- **Content**: A boolean flag
-- **Location**: Chrome's local storage (chrome.storage.local)
-
-### 4. User Analytics (`kord_analytics`) - Future Feature
+### 3. User Analytics (`kord_analytics`) - Future Feature
 - **Purpose**: Track your own usage patterns to show personal statistics
 - **Content**: Total usage count, action counts (tab switches, bookmarks opened, etc.)
 - **Privacy**: 100% local, never transmitted anywhere
