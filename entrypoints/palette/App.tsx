@@ -55,6 +55,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   FolderPlus,
 };
 
+const BOOKMARK_CACHE_TTL = 60 * 1000; // 60秒キャッシュ
+
 function App() {
 
   const [query, setQuery] = useState('');
@@ -62,30 +64,34 @@ function App() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isComposing, setIsComposing] = useState(false);
   const [mode, setMode] = useState<'search' | 'command' | 'folder-select'>('search');
-  const [paletteShownCount, setpaletteShownCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [pendingBookmark, setPendingBookmark] = useState<{ title: string; url: string } | null>(null);
   const [folderCreateParent, setFolderCreateParent] = useState<{ id: string; title: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
-  const prevModeRef = useRef(mode);
   const folderCreateParentRef = useRef<{ id: string; title: string } | null>(null);
   const pendingBookmarkRef = useRef<{ title: string; url: string } | null>(null);
   const queryRef = useRef(query);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bookmarkCacheRef = useRef<{
+    data: Array<{ id: string; title: string; url: string }> | null;
+    timestamp: number;
+  }>({ data: null, timestamp: 0 });
 
   // queryRef を常に最新の query に同期
   useEffect(() => {
     queryRef.current = query;
   }, [query]);
 
-  // 初期化: オートフォーカス（複数回試行）
+  // 初期化: オートフォーカス + 初期検索（mount 時の1回のみ）
   useEffect(() => {
     const focusInput = () => {
       inputRef.current?.focus();
     };
 
-    // 即座にフォーカス
+    // 即座にフォーカス＆初期検索
     focusInput();
+    performSearch('', 'search'); // eslint-disable-line react-hooks/exhaustive-deps
 
     // タイマーで複数回試行
     const timer1 = setTimeout(focusInput, 50);
@@ -97,7 +103,7 @@ function App() {
       clearTimeout(timer2);
       clearTimeout(timer3);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // パレット表示/非表示メッセージを受信
   useEffect(() => {
@@ -107,8 +113,11 @@ function App() {
         setTimeout(() => {
           inputRef.current?.focus();
         }, 50);
-        // 検索を再実行するためにカウンターを更新
-        setpaletteShownCount(c => c + 1);
+        // 状態をリセットして初期検索を実行
+        setQuery('');
+        setSelectedIndex(0);
+        setMode('search');
+        performSearch('', 'search');
       } else if (e.data?.type === 'PALETTE_HIDDEN') {
         // 状態をリセット
         setQuery('');
@@ -199,8 +208,11 @@ function App() {
           folderCreateParentRef.current = null;
           setMode('command');
           setQuery('');
+          performSearch('', 'command');
         } else {
-          setMode((prev) => prev === 'search' ? 'command' : 'search');
+          const newMode = mode === 'search' ? 'command' : 'search';
+          setMode(newMode);
+          performSearch(queryRef.current, newMode);
         }
         setSelectedIndex(0);
       } else if (e.key === 'Enter') {
@@ -280,34 +292,19 @@ function App() {
     return () => resultsElement.removeEventListener('wheel', preventScroll);
   }, []);
 
-  // 検索クエリが変更されたら結果を更新
-  useEffect(() => {
-    const modeChanged = prevModeRef.current !== mode;
-    prevModeRef.current = mode;
-
-    const runSearch = () => performSearch(query);
-
-    if (modeChanged || paletteShownCount > 0) {
-      // モード切り替え時・パレット表示時は即時実行（遅延なし）
-      runSearch();
-      return;
-    }
-
-    // 入力時は300msデバウンス
-    const searchTimeout = setTimeout(runSearch, 300);
-    return () => clearTimeout(searchTimeout);
-  }, [query, mode, paletteShownCount]);
-
   /**
-   * 統合検索を実行
+   * 統合検索を実行（タブ・履歴・ブックマーク を常に対象）
    */
-  const performSearch = async (searchQuery: string) => {
+  const performSearch = async (
+    searchQuery: string,
+    currentMode: 'search' | 'command' | 'folder-select',
+  ) => {
     const trimmedQuery = searchQuery.trim();
     let allResults: SearchResult[] = [];
 
     // フォルダ選択モード
-    if (mode === 'folder-select') {
-      if (folderCreateParent) return; // フォルダ名入力中は検索しない
+    if (currentMode === 'folder-select') {
+      if (folderCreateParentRef.current) return; // フォルダ名入力中は検索しない
       const allFolders: { id: string; title: string; depth: number }[] = await browser.runtime.sendMessage({ type: 'GET_BOOKMARK_FOLDERS' });
       const newFolderItem: SearchResult = {
         id: 'new-folder',
@@ -334,9 +331,8 @@ function App() {
     }
 
     // コマンドモードの場合
-    if (mode === 'command') {
+    if (currentMode === 'command') {
       if (!trimmedQuery) {
-        // 空のクエリ: 全コマンドを表示
         allResults = getCommands().map((cmd) => ({
           id: cmd.id,
           type: 'command' as ResultType,
@@ -348,7 +344,6 @@ function App() {
           score: 0,
         }));
       } else {
-        // 検索クエリあり: コマンドのみ検索
         allResults = searchCommands(trimmedQuery).sort((a, b) => b.score - a.score);
       }
       setResults(allResults.slice(0, 12));
@@ -356,34 +351,41 @@ function App() {
       return;
     }
 
-    // 検索モードの場合（既存のロジック）
+    // 現在のアクティブタブを除外するため ID を取得
+    const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
+    const activeTabId = activeTab?.id;
+
+    // 検索モード: クエリなし → タブ一覧をFrecency順
     if (!trimmedQuery) {
-      // 空のクエリ: 開いているタブをFrecencyスコア順に表示
       const tabs = await getTabs();
       const frecencyData = await getFrecencyData();
-      const tabResults: SearchResult[] = tabs.map((tab: any) => ({
-        id: tab.id,
-        type: 'tab' as ResultType,
-        title: tab.title,
-        subtitle: tab.url,
-        url: tab.url,
-        favicon: tab.favicon,
-        score: calculateFrecencyScore(frecencyData[tab.id]),
-        tabId: tab.tabId,
-        windowId: tab.windowId,
-      }));
+      const tabResults: SearchResult[] = tabs
+        .filter((tab: any) => tab.tabId !== activeTabId)
+        .map((tab: any) => ({
+          id: tab.id,
+          type: 'tab' as ResultType,
+          title: tab.title,
+          subtitle: tab.url,
+          url: tab.url,
+          favicon: tab.favicon,
+          score: calculateFrecencyScore(frecencyData[tab.id]),
+          tabId: tab.tabId,
+          windowId: tab.windowId,
+        }));
       allResults = tabResults.sort((a, b) => b.score - a.score);
     } else {
-      // 検索クエリあり: タブと履歴のみ検索（Arc風）
-      const [tabs, history, suggestions] = await Promise.all([
+      // クエリあり: タブ・履歴・ブックマークを並列取得してスコア順に統合
+      const [tabs, history, bookmarks, suggestions] = await Promise.all([
         getTabs(),
         getHistory(trimmedQuery),
+        getBookmarksCached(),
         getGoogleSuggestions(trimmedQuery),
       ]);
 
       const frecencyData = await getFrecencyData();
 
       const tabResults: SearchResult[] = tabs
+        .filter((tab: any) => tab.tabId !== activeTabId)
         .map((tab: any) => {
           const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [tab.title, tab.url || '']).score;
           const frecencyScore = calculateFrecencyScore(frecencyData[tab.id]);
@@ -399,7 +401,7 @@ function App() {
             windowId: tab.windowId,
           };
         })
-        .filter((r: SearchResult) => r.score > 0.3); // スコア閾値を設定（Arc風）
+        .filter((r: SearchResult) => r.score > 0.3);
 
       const historyResults: SearchResult[] = history
         .map((h: any) => {
@@ -413,25 +415,46 @@ function App() {
             score: fuzzyScore,
           };
         })
-        .filter((r: SearchResult) => r.score > 0.3); // スコア閾値を設定
+        .filter((r: SearchResult) => r.score > 0.3);
 
-      allResults = [...tabResults, ...historyResults].sort(
+      const bookmarkResults: SearchResult[] = bookmarks
+        .map((b: any) => {
+          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [b.title, b.url || '']).score;
+          return {
+            id: b.id,
+            type: 'bookmark' as ResultType,
+            title: b.title,
+            subtitle: b.url,
+            url: b.url,
+            score: fuzzyScore,
+          };
+        })
+        .filter((r: SearchResult) => r.score > 0.3);
+
+      allResults = [...tabResults, ...historyResults, ...bookmarkResults].sort(
         (a, b) => b.score - a.score
       );
 
-      // Google検索候補を最下部に追加（複数表示）
+      // Google検索候補を最下部に追加
       const searchResults: SearchResult[] = suggestions.map((suggestion: string, index: number) => ({
         id: `google-search-${index}`,
         type: 'search' as ResultType,
         title: suggestion,
         subtitle: `https://www.google.com/search?q=${encodeURIComponent(suggestion)}`,
         url: `https://www.google.com/search?q=${encodeURIComponent(suggestion)}`,
-        score: -1 - index, // 順序を保持しつつ最下部に表示
+        score: -1 - index,
       }));
       allResults.push(...searchResults);
     }
 
-    setResults(allResults.slice(0, 11)); // Google検索候補を含めて最大11件
+    const finalResults = allResults.slice(0, 11);
+    console.log('[QuickBar] performSearch results:', finalResults.map(r => ({
+      type: r.type,
+      title: r.title,
+      url: r.url,
+      score: r.score,
+    })));
+    setResults(finalResults);
     setSelectedIndex(0);
   };
 
@@ -457,6 +480,16 @@ function App() {
 
   const getBookmarks = async () => {
     return browser.runtime.sendMessage({ type: 'GET_BOOKMARKS' });
+  };
+
+  const getBookmarksCached = async () => {
+    const now = Date.now();
+    if (bookmarkCacheRef.current.data && now - bookmarkCacheRef.current.timestamp < BOOKMARK_CACHE_TTL) {
+      return bookmarkCacheRef.current.data;
+    }
+    const data = await getBookmarks();
+    bookmarkCacheRef.current = { data, timestamp: now };
+    return data;
   };
 
   const getHistory = async (query: string) => {
@@ -652,6 +685,7 @@ function App() {
             setQuery('');
             setFolderCreateParent(null);
             folderCreateParentRef.current = null;
+            performSearch('', 'folder-select');
           }
           return false;
         }
@@ -698,11 +732,12 @@ function App() {
       setFolderCreateParent(null);
       folderCreateParentRef.current = null;
 
-      // 拡張機能のオリジンを明示的に指定
-      window.parent.postMessage(
-        { type: 'CLOSE_PALETTE' },
-        getExtensionOrigin()
-      );
+      const origin = getExtensionOrigin();
+      window.parent.postMessage({ type: 'CLOSE_PALETTE' }, origin);
+      window.parent.postMessage({ type: 'CLOSE_PALETTE' }, '*');
+      if (window.top && window.top !== window) {
+        window.top.postMessage({ type: 'CLOSE_PALETTE' }, '*');
+      }
     } catch {
       // 無視
     }
@@ -782,7 +817,14 @@ function App() {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              const newQuery = e.target.value;
+              setQuery(newQuery);
+              if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+              searchTimerRef.current = setTimeout(() => {
+                performSearch(newQuery, mode);
+              }, 300);
+            }}
             placeholder={
               mode === 'folder-select'
                 ? (folderCreateParent ? 'Enter folder name...' : 'Search folders...')
