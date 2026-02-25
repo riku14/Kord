@@ -2,7 +2,7 @@
   "name": "kord",
   "description": "Lightning-fast command palette for Chrome. Search tabs, bookmarks, history instantly with Arc Browser-inspired design and frecency ranking.",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "wxt",
