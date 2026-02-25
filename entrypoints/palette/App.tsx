@@ -25,7 +25,7 @@ import {
   FolderPlus,
   type LucideIcon
 } from 'lucide-react';
-import { fuzzyMatchMultiple } from '../../lib/fuzzy';
+import { fuzzyMatchMultiple, normalizeUrl } from '../../lib/fuzzy';
 import { recordUsage, getFrecencyData, calculateFrecencyScore } from '../../lib/frecency';
 import { getCommands } from '../../lib/constants';
 import type { SearchResult, ResultType } from '../../lib/types';
@@ -387,7 +387,7 @@ function App() {
       const tabResults: SearchResult[] = tabs
         .filter((tab: any) => tab.tabId !== activeTabId)
         .map((tab: any) => {
-          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [tab.title, tab.url || '']).score;
+          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [tab.title, tab.url || '', normalizeUrl(tab.url || '')]).score;
           const frecencyScore = calculateFrecencyScore(frecencyData[tab.id]);
           return {
             id: tab.id,
@@ -405,21 +405,24 @@ function App() {
 
       const historyResults: SearchResult[] = history
         .map((h: any) => {
-          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [h.title, h.url || '']).score;
+          const urlNormalized = normalizeUrl(h.url || '');
+          // タイトルが空の場合はURLのドメイン部分を代替タイトルとして使用
+          const effectiveTitle = h.title || urlNormalized.split('/')[0];
+          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [effectiveTitle, h.url || '', urlNormalized]).score;
           return {
             id: h.id,
             type: 'history' as ResultType,
-            title: h.title,
+            title: effectiveTitle,
             subtitle: h.url,
             url: h.url,
             score: fuzzyScore,
           };
         })
-        .filter((r: SearchResult) => r.score > 0.3);
+        .filter((r: SearchResult) => r.score > 0);
 
       const bookmarkResults: SearchResult[] = bookmarks
         .map((b: any) => {
-          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [b.title, b.url || '']).score;
+          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [b.title, b.url || '', normalizeUrl(b.url || '')]).score;
           return {
             id: b.id,
             type: 'bookmark' as ResultType,

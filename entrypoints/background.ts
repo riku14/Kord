@@ -143,17 +143,19 @@ async function getBookmarks() {
 
 /**
  * 履歴を検索
+ * - クエリはclient側のfuzzyMatchで処理するため、Chrome APIでは広範な候補を取得
  */
 async function getHistory(query: string) {
+  // Chrome APIでは候補を広く取得し、client側のfuzzyMatchで精度の高い検索を行う
   const results = await browser.history.search({
-    text: query || '',
-    maxResults: 50,
+    text: '',
+    maxResults: 200,
     startTime: 0,
   });
 
   return results.map((item) => ({
     id: `history-${item.id}`,
-    title: item.title || 'Untitled',
+    title: item.title || '',
     url: item.url,
     lastVisitTime: item.lastVisitTime,
   }));

@@ -78,6 +78,19 @@ export function fuzzyMatch(query: string, target: string): FuzzyMatch {
 }
 
 /**
+ * URLを正規化して検索精度を向上
+ * - プロトコル (https://, http://) を除去
+ * - www. を除去
+ * - 末尾スラッシュを除去
+ */
+export function normalizeUrl(url: string): string {
+  return url
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/$/, '');
+}
+
+/**
  * 複数フィールドに対してファジー検索を実行
  */
 export function fuzzyMatchMultiple(
