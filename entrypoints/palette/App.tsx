@@ -77,6 +77,12 @@ function App() {
     data: Array<{ id: string; title: string; url: string }> | null;
     timestamp: number;
   }>({ data: null, timestamp: 0 });
+  const [folderStack, setFolderStack] = useState<{ id: string; title: string }[]>([]);
+  const folderStackRef = useRef<{ id: string; title: string }[]>([]);
+  const folderCacheRef = useRef<{
+    data: Array<{ id: string; title: string; depth: number }> | null;
+    timestamp: number;
+  }>({ data: null, timestamp: 0 });
 
   // queryRef を常に最新の query に同期
   useEffect(() => {
@@ -128,6 +134,8 @@ function App() {
         pendingBookmarkRef.current = null;
         setFolderCreateParent(null);
         folderCreateParentRef.current = null;
+        setFolderStack([]);
+        folderStackRef.current = [];
       }
     };
 
@@ -161,6 +169,24 @@ function App() {
           setFolderCreateParent(null);
           folderCreateParentRef.current = null;
           setQuery('');
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          return;
+        }
+
+        // フォルダブラウジング中は一段階上に戻る
+        if (folderStackRef.current.length > 0) {
+          const newStack = folderStackRef.current.slice(0, -1);
+          setFolderStack(newStack);
+          folderStackRef.current = newStack;
+          setQuery('');
+          queryRef.current = '';
+          if (newStack.length > 0) {
+            loadFolderContents(newStack[newStack.length - 1].id);
+          } else {
+            performSearch('', 'search');
+          }
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
@@ -374,11 +400,12 @@ function App() {
         }));
       allResults = tabResults.sort((a, b) => b.score - a.score);
     } else {
-      // クエリあり: タブ・履歴・ブックマークを並列取得してスコア順に統合
-      const [tabs, history, bookmarks, suggestions] = await Promise.all([
+      // クエリあり: タブ・履歴・ブックマーク・フォルダを並列取得してスコア順に統合
+      const [tabs, history, bookmarks, folders, suggestions] = await Promise.all([
         getTabs(),
         getHistory(trimmedQuery),
         getBookmarksCached(),
+        getBookmarkFoldersCached(),
         getGoogleSuggestions(trimmedQuery),
       ]);
 
@@ -434,7 +461,22 @@ function App() {
         })
         .filter((r: SearchResult) => r.score > 0.3);
 
-      allResults = [...tabResults, ...historyResults, ...bookmarkResults].sort(
+      const folderResults: SearchResult[] = folders
+        .map((f: { id: string; title: string; depth: number }) => {
+          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [f.title]).score;
+          return {
+            id: `folder-${f.id}`,
+            type: 'bookmark-folder' as ResultType,
+            title: f.title,
+            subtitle: 'Bookmark Folder',
+            folderId: f.id,
+            score: fuzzyScore * 0.8,
+            depth: f.depth,
+          };
+        })
+        .filter((r: SearchResult) => r.score > 0.3);
+
+      allResults = [...tabResults, ...historyResults, ...bookmarkResults, ...folderResults].sort(
         (a, b) => b.score - a.score
       );
 
@@ -493,6 +535,34 @@ function App() {
     const data = await getBookmarks();
     bookmarkCacheRef.current = { data, timestamp: now };
     return data;
+  };
+
+  const getBookmarkFoldersCached = async () => {
+    const now = Date.now();
+    if (folderCacheRef.current.data && now - folderCacheRef.current.timestamp < BOOKMARK_CACHE_TTL) {
+      return folderCacheRef.current.data;
+    }
+    const data = await browser.runtime.sendMessage({ type: 'GET_BOOKMARK_FOLDERS' });
+    folderCacheRef.current = { data, timestamp: now };
+    return data;
+  };
+
+  const loadFolderContents = async (folderId: string) => {
+    const contents: any[] = await browser.runtime.sendMessage({
+      type: 'GET_FOLDER_CONTENTS',
+      folderId,
+    });
+    const loadedResults: SearchResult[] = contents.map(item => ({
+      id: item.id,
+      type: (item.isFolder ? 'bookmark-folder' : 'bookmark') as ResultType,
+      title: item.title,
+      subtitle: item.url || 'Folder',
+      url: item.url || undefined,
+      folderId: item.isFolder ? item.bookmarkNodeId : undefined,
+      score: 0,
+    }));
+    setResults(loadedResults);
+    setSelectedIndex(0);
   };
 
   const getHistory = async (query: string) => {
@@ -563,6 +633,7 @@ function App() {
 
         case 'bookmark-folder':
           if (pendingBookmark && result.folderId) {
+            // ブックマーク追加モード: 選択フォルダにブックマークを保存
             await browser.runtime.sendMessage({
               type: 'ADD_BOOKMARK',
               title: pendingBookmark.title,
@@ -572,6 +643,15 @@ function App() {
             setPendingBookmark(null);
             pendingBookmarkRef.current = null;
             setMode('search');
+          } else if (result.folderId) {
+            // フォルダブラウジング: フォルダ内のアイテムを表示
+            const newStack = [...folderStackRef.current, { id: result.folderId, title: result.title }];
+            setFolderStack(newStack);
+            folderStackRef.current = newStack;
+            setQuery('');
+            queryRef.current = '';
+            await loadFolderContents(result.folderId);
+            return; // パレットを閉じない
           }
           break;
 
@@ -734,6 +814,8 @@ function App() {
       pendingBookmarkRef.current = null;
       setFolderCreateParent(null);
       folderCreateParentRef.current = null;
+      setFolderStack([]);
+      folderStackRef.current = [];
 
       const origin = getExtensionOrigin();
       window.parent.postMessage({ type: 'CLOSE_PALETTE' }, origin);
@@ -823,6 +905,11 @@ function App() {
             onChange={(e) => {
               const newQuery = e.target.value;
               setQuery(newQuery);
+              // フォルダブラウジング中にタイプしたらルートに戻る
+              if (folderStackRef.current.length > 0) {
+                setFolderStack([]);
+                folderStackRef.current = [];
+              }
               if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
               searchTimerRef.current = setTimeout(() => {
                 performSearch(newQuery, mode);
@@ -843,6 +930,17 @@ function App() {
           <div className="folder-create-banner">
             <FolderPlus size={14} />
             <span>Creating folder in: {folderCreateParent.title}</span>
+          </div>
+        )}
+        {folderStack.length > 0 && (
+          <div className="folder-breadcrumb">
+            <Folder size={12} />
+            {folderStack.map((folder) => (
+              <React.Fragment key={folder.id}>
+                <span className="breadcrumb-sep">›</span>
+                <span className="breadcrumb-item">{folder.title}</span>
+              </React.Fragment>
+            ))}
           </div>
         )}
       </div>

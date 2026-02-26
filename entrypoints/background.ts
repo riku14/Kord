@@ -1,14 +1,17 @@
-import type { MessageAction } from '../lib/types';
-import { isSafeUrl } from '../lib/security';
+import type { MessageAction } from "../lib/types";
+import { isSafeUrl } from "../lib/security";
 
 export default defineBackground(() => {
   // Ctrl+K / Cmd+K コマンドのリスナー
   browser.commands.onCommand.addListener(async (command) => {
-    if (command === 'open-palette') {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (command === "open-palette") {
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       if (tab?.id) {
         try {
-          await browser.tabs.sendMessage(tab.id, { type: 'TOGGLE_PALETTE' });
+          await browser.tabs.sendMessage(tab.id, { type: "TOGGLE_PALETTE" });
         } catch {
           // コンテンツスクリプトが未ロードの場合は無視
         }
@@ -17,80 +20,88 @@ export default defineBackground(() => {
   });
 
   // Content Scriptからのメッセージリスナー
-  browser.runtime.onMessage.addListener((message: MessageAction, sender, sendResponse) => {
-    handleMessage(message, sender)
-      .then(sendResponse)
-      .catch((error) => {
-        sendResponse({ error: error.message });
-      });
-    return true; // 非同期レスポンスを許可
-  });
+  browser.runtime.onMessage.addListener(
+    (message: MessageAction, sender, sendResponse) => {
+      handleMessage(message, sender)
+        .then(sendResponse)
+        .catch((error) => {
+          sendResponse({ error: error.message });
+        });
+      return true; // 非同期レスポンスを許可
+    },
+  );
 });
 
 /**
  * メッセージハンドラー
  */
-async function handleMessage(message: MessageAction, sender: browser.Runtime.MessageSender) {
+async function handleMessage(
+  message: MessageAction,
+  sender: Browser.runtime.MessageSender,
+) {
   switch (message.type) {
-    case 'GET_TABS':
+    case "GET_TABS":
       return await getTabs();
 
-    case 'GET_BOOKMARKS':
+    case "GET_BOOKMARKS":
       return await getBookmarks();
 
-    case 'GET_HISTORY':
+    case "GET_HISTORY":
       return await getHistory(message.query);
 
-    case 'SWITCH_TAB':
+    case "SWITCH_TAB":
       return await switchTab(message.tabId, message.windowId);
 
-    case 'CLOSE_TAB':
+    case "CLOSE_TAB":
       return await closeTab(message.tabId);
 
-    case 'CLOSE_OTHER_TABS':
+    case "CLOSE_OTHER_TABS":
       return await closeOtherTabs(message.tabId);
 
-    case 'DUPLICATE_TAB':
+    case "DUPLICATE_TAB":
       return await duplicateTab(message.tabId);
 
-    case 'PIN_TAB':
+    case "PIN_TAB":
       return await pinTab(message.tabId, message.pinned);
 
-    case 'MUTE_TAB':
+    case "MUTE_TAB":
       return await muteTab(message.tabId, message.muted);
 
-    case 'NEW_TAB':
+    case "NEW_TAB":
       return await newTab(message.url);
 
-    case 'GO_BACK':
+    case "GO_BACK":
       return await goBack(message.tabId);
 
-    case 'GO_FORWARD':
+    case "GO_FORWARD":
       return await goForward(message.tabId);
 
-    case 'RELOAD_TAB':
+    case "RELOAD_TAB":
       return await reloadTab(message.tabId, message.bypassCache);
 
-    case 'GET_RECENTLY_CLOSED':
+    case "GET_RECENTLY_CLOSED":
       return await getRecentlyClosed();
 
-    case 'RESTORE_SESSION':
+    case "RESTORE_SESSION":
       return await restoreSession(message.sessionId);
 
-    case 'ADD_BOOKMARK':
+    case "ADD_BOOKMARK":
       return await addBookmark(message.title, message.url, message.parentId);
 
-    case 'GET_BOOKMARK_FOLDERS':
+    case "GET_BOOKMARK_FOLDERS":
       return await getBookmarkFolders();
 
-    case 'CREATE_BOOKMARK_FOLDER':
+    case "CREATE_BOOKMARK_FOLDER":
       return await createBookmarkFolder(message.name, message.parentId);
 
-    case 'CLEAR_CACHE':
+    case "CLEAR_CACHE":
       return await clearCacheAndRefresh(message.tabId);
 
-    case 'CLEAR_COOKIES':
+    case "CLEAR_COOKIES":
       return await clearCookiesAndRefresh(message.tabId);
+
+    case "GET_FOLDER_CONTENTS":
+      return await getFolderContents(message.folderId);
 
     default:
       throw new Error(`Unknown message type: ${(message as any).type}`);
@@ -106,7 +117,7 @@ async function getTabs() {
     id: `tab-${tab.id}`,
     tabId: tab.id,
     windowId: tab.windowId,
-    title: tab.title || 'Untitled',
+    title: tab.title || "Untitled",
     url: tab.url,
     // faviconのURL検証を追加
     favicon: isSafeUrl(tab.favIconUrl) ? tab.favIconUrl : undefined,
@@ -122,7 +133,7 @@ async function getBookmarks() {
   const tree = await browser.bookmarks.getTree();
   const bookmarks: any[] = [];
 
-  function flatten(nodes: browser.bookmarks.BookmarkTreeNode[]) {
+  function flatten(nodes: Browser.bookmarks.BookmarkTreeNode[]) {
     for (const node of nodes) {
       if (node.url) {
         bookmarks.push({
@@ -148,14 +159,14 @@ async function getBookmarks() {
 async function getHistory(query: string) {
   // Chrome APIでは候補を広く取得し、client側のfuzzyMatchで精度の高い検索を行う
   const results = await browser.history.search({
-    text: '',
+    text: "",
     maxResults: 200,
     startTime: 0,
   });
 
   return results.map((item) => ({
     id: `history-${item.id}`,
-    title: item.title || '',
+    title: item.title || "",
     url: item.url,
     lastVisitTime: item.lastVisitTime,
   }));
@@ -166,7 +177,7 @@ async function getHistory(query: string) {
  */
 async function closePaletteInTab(tabId: number) {
   try {
-    await browser.tabs.sendMessage(tabId, { type: 'CLOSE_PALETTE' });
+    await browser.tabs.sendMessage(tabId, { type: "CLOSE_PALETTE" });
   } catch {
     // コンテンツスクリプトが読み込まれていない場合などは無視
   }
@@ -176,7 +187,10 @@ async function closePaletteInTab(tabId: number) {
  * タブに切り替え
  */
 async function switchTab(tabId: number, windowId: number) {
-  const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const [currentTab] = await browser.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
   const previousTabId = currentTab?.id;
 
   await browser.windows.update(windowId, { focused: true });
@@ -201,7 +215,9 @@ async function closeTab(tabId: number) {
  */
 async function closeOtherTabs(keepTabId: number) {
   const tabs = await browser.tabs.query({ currentWindow: true });
-  const tabsToClose = tabs.filter((tab) => tab.id !== keepTabId && !tab.pinned).map((tab) => tab.id!);
+  const tabsToClose = tabs
+    .filter((tab) => tab.id !== keepTabId && !tab.pinned)
+    .map((tab) => tab.id!);
   if (tabsToClose.length > 0) {
     await browser.tabs.remove(tabsToClose);
   }
@@ -238,7 +254,10 @@ async function muteTab(tabId: number, muted: boolean) {
  * 新しいタブを開く
  */
 async function newTab(url?: string) {
-  const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const [currentTab] = await browser.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
   const previousTabId = currentTab?.id;
 
   await browser.tabs.create({ url });
@@ -276,7 +295,7 @@ async function goBack(tabId: number) {
     return { success: true };
   } catch (error) {
     // 履歴がない場合はエラーを無視
-    return { success: false, error: 'No history available' };
+    return { success: false, error: "No history available" };
   }
 }
 
@@ -288,7 +307,7 @@ async function goForward(tabId: number) {
     await browser.tabs.goForward(tabId);
     return { success: true };
   } catch (error) {
-    return { success: false, error: 'No forward history available' };
+    return { success: false, error: "No forward history available" };
   }
 }
 
@@ -307,14 +326,18 @@ async function getRecentlyClosed() {
   const sessions = await browser.sessions.getRecentlyClosed({ maxResults: 25 });
   return sessions.map((s) => ({
     sessionId: s.tab?.sessionId || s.window?.sessionId,
-    tab: s.tab ? {
-      title: s.tab.title,
-      url: s.tab.url,
-      favicon: s.tab.favIconUrl,
-    } : null,
-    window: s.window ? {
-      tabs: s.window.tabs?.map((t) => ({ title: t.title, url: t.url })),
-    } : null,
+    tab: s.tab
+      ? {
+          title: s.tab.title,
+          url: s.tab.url,
+          favicon: s.tab.favIconUrl,
+        }
+      : null,
+    window: s.window
+      ? {
+          tabs: s.window.tabs?.map((t) => ({ title: t.title, url: t.url })),
+        }
+      : null,
   }));
 }
 
@@ -322,7 +345,10 @@ async function getRecentlyClosed() {
  * セッションを復元
  */
 async function restoreSession(sessionId: string) {
-  const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const [currentTab] = await browser.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
   const previousTabId = currentTab?.id;
 
   await browser.sessions.restore(sessionId);
@@ -337,7 +363,11 @@ async function restoreSession(sessionId: string) {
  * ブックマークを追加
  */
 async function addBookmark(title: string, url: string, parentId?: string) {
-  await browser.bookmarks.create({ title, url, ...(parentId ? { parentId } : {}) });
+  await browser.bookmarks.create({
+    title,
+    url,
+    ...(parentId ? { parentId } : {}),
+  });
   return { success: true };
 }
 
@@ -348,21 +378,38 @@ async function getBookmarkFolders() {
   const tree = await browser.bookmarks.getTree();
   const folders: { id: string; title: string; depth: number }[] = [];
 
-  function traverse(nodes: browser.bookmarks.BookmarkTreeNode[], depth: number) {
+  function traverse(
+    nodes: Browser.bookmarks.BookmarkTreeNode[],
+    depth: number,
+  ) {
     for (const node of nodes) {
       // ルートノード（id="0"）と URL を持つノード（ブックマーク）を除外
-      if (node.id !== '0' && !node.url && node.title) {
+      if (node.id !== "0" && !node.url && node.title) {
         folders.push({ id: node.id, title: node.title, depth });
       }
       if (node.children) {
         // ルートの直下（depth=0）の子をdepth=0として扱う
-        traverse(node.children, node.id === '0' ? 0 : depth + 1);
+        traverse(node.children, node.id === "0" ? 0 : depth + 1);
       }
     }
   }
 
   traverse(tree, 0);
   return folders;
+}
+
+/**
+ * フォルダの直接の子要素（ブックマーク＋サブフォルダ）を取得
+ */
+async function getFolderContents(folderId: string) {
+  const children = await browser.bookmarks.getChildren(folderId);
+  return children.map((node) => ({
+    id: node.url ? `bookmark-${node.id}` : `folder-${node.id}`,
+    bookmarkNodeId: node.id,
+    title: node.title,
+    url: node.url || null,
+    isFolder: !node.url,
+  }));
 }
 
 /**

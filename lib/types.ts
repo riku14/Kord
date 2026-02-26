@@ -53,4 +53,5 @@ export type MessageAction =
   | { type: 'GET_BOOKMARK_FOLDERS' }
   | { type: 'CREATE_BOOKMARK_FOLDER'; name: string; parentId: string }
   | { type: 'CLEAR_CACHE'; tabId: number }
-  | { type: 'CLEAR_COOKIES'; tabId: number };
+  | { type: 'CLEAR_COOKIES'; tabId: number }
+  | { type: 'GET_FOLDER_CONTENTS'; folderId: string };
