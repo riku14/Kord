@@ -8,6 +8,21 @@ export default defineConfig({
     description: 'Lightning-fast command palette for Chrome. Search tabs, bookmarks, history instantly. Arc-inspired design with frecency ranking.',
     default_locale: 'en',
     homepage_url: 'https://github.com/riku14/Kord',
+    icons: {
+      16: 'icon/16.png',
+      32: 'icon/32.png',
+      48: 'icon/48.png',
+      96: 'icon/96.png',
+      128: 'icon/128.png',
+    },
+    action: {
+      default_icon: {
+        16: 'icon/16.png',
+        24: 'icon/32.png',
+        32: 'icon/32.png',
+      },
+      default_title: 'Open Kord',
+    },
     permissions: [
       'tabs',
       'bookmarks',
