@@ -419,3 +419,4 @@ async function createBookmarkFolder(name: string, parentId: string) {
   const folder = await browser.bookmarks.create({ title: name, parentId });
   return { success: true, folderId: folder.id };
 }
+

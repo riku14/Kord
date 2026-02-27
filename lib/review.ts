@@ -33,10 +33,10 @@ function createDefaultReviewState(): ReviewState {
  */
 async function getReviewState(): Promise<ReviewState> {
   try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
+    const result = await browser.storage.local.get(STORAGE_KEY);
     if (!result[STORAGE_KEY]) {
       const defaultState = createDefaultReviewState();
-      await chrome.storage.local.set({ [STORAGE_KEY]: defaultState });
+      await browser.storage.local.set({ [STORAGE_KEY]: defaultState });
       return defaultState;
     }
     return result[STORAGE_KEY];
@@ -50,7 +50,7 @@ async function getReviewState(): Promise<ReviewState> {
  */
 async function saveReviewState(state: ReviewState): Promise<void> {
   try {
-    await chrome.storage.local.set({ [STORAGE_KEY]: state });
+    await browser.storage.local.set({ [STORAGE_KEY]: state });
   } catch {
     // 無視
   }
@@ -109,5 +109,5 @@ export async function dismissReviewPrompt(): Promise<void> {
 export function openReviewPage(): void {
   // Chrome Web Store のレビューページURL（公開後に更新）
   const reviewUrl = 'https://chromewebstore.google.com/detail/kord/YOUR_EXTENSION_ID/reviews';
-  chrome.tabs.create({ url: reviewUrl });
+  browser.tabs.create({ url: reviewUrl });
 }

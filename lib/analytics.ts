@@ -11,6 +11,7 @@ interface AnalyticsData {
     historyOpen: number;
     commandExecute: number;
     searchGoogle: number;
+    urlNavigation: number;
   };
   lastUsedAt: number;
   installDate: number;
@@ -30,6 +31,7 @@ function createDefaultAnalytics(): AnalyticsData {
       historyOpen: 0,
       commandExecute: 0,
       searchGoogle: 0,
+      urlNavigation: 0,
     },
     lastUsedAt: Date.now(),
     installDate: Date.now(),
@@ -41,11 +43,11 @@ function createDefaultAnalytics(): AnalyticsData {
  */
 export async function getAnalyticsData(): Promise<AnalyticsData> {
   try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
+    const result = await browser.storage.local.get(STORAGE_KEY);
     if (!result[STORAGE_KEY]) {
       // 初回アクセス時はデフォルトデータを作成して保存
       const defaultData = createDefaultAnalytics();
-      await chrome.storage.local.set({ [STORAGE_KEY]: defaultData });
+      await browser.storage.local.set({ [STORAGE_KEY]: defaultData });
       return defaultData;
     }
     return result[STORAGE_KEY];
@@ -67,7 +69,7 @@ export async function recordAction(
     data.actionCounts[actionType]++;
     data.lastUsedAt = Date.now();
 
-    await chrome.storage.local.set({ [STORAGE_KEY]: data });
+    await browser.storage.local.set({ [STORAGE_KEY]: data });
   } catch {
     // 無視
   }

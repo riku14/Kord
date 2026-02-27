@@ -23,9 +23,10 @@ import {
   ChevronRight,
   Folder,
   FolderPlus,
+  ExternalLink,
   type LucideIcon
 } from 'lucide-react';
-import { fuzzyMatchMultiple, normalizeUrl } from '../../lib/fuzzy';
+import { fuzzyMatchMultiple, normalizeUrl, isValidUrl, normalizeUrlInput } from '../../lib/fuzzy';
 import { recordUsage, getFrecencyData, calculateFrecencyScore } from '../../lib/frecency';
 import { getCommands } from '../../lib/constants';
 import type { SearchResult, ResultType } from '../../lib/types';
@@ -400,96 +401,92 @@ function App() {
         }));
       allResults = tabResults.sort((a, b) => b.score - a.score);
     } else {
-      // クエリあり: タブ・履歴・ブックマーク・フォルダを並列取得してスコア順に統合
-      const [tabs, history, bookmarks, folders, suggestions] = await Promise.all([
-        getTabs(),
-        getHistory(trimmedQuery),
-        getBookmarksCached(),
-        getBookmarkFoldersCached(),
-        getGoogleSuggestions(trimmedQuery),
-      ]);
+      // URLかどうかを先にチェック
+      const isUrl = isValidUrl(trimmedQuery);
+      
+      if (isUrl) {
+        // URLの場合：直接ナビゲーション結果を最優先で表示
+        const normalizedUrl = normalizeUrlInput(trimmedQuery);
+        allResults = [{
+          id: `url-${trimmedQuery}`,
+          type: 'url' as ResultType,
+          title: trimmedQuery,
+          subtitle: normalizedUrl,
+          url: normalizedUrl,
+          score: 1000, // 最優先
+        }];
+      } else {
+        // 通常の検索: 履歴・ブックマーク・フォルダを並列取得してスコア順に統合（タブは除外）
+        const [history, bookmarks, folders, suggestions] = await Promise.all([
+          getHistory(trimmedQuery),
+          getBookmarksCached(),
+          getBookmarkFoldersCached(),
+          getGoogleSuggestions(trimmedQuery),
+        ]);
 
-      const frecencyData = await getFrecencyData();
+        const historyResults: SearchResult[] = history
+          .map((h: any) => {
+            const urlNormalized = normalizeUrl(h.url || '');
+            // タイトルが空の場合はURLのドメイン部分を代替タイトルとして使用
+            const effectiveTitle = h.title || urlNormalized.split('/')[0];
+            const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [effectiveTitle, h.url || '', urlNormalized]).score;
+            return {
+              id: h.id,
+              type: 'history' as ResultType,
+              title: effectiveTitle,
+              subtitle: h.url,
+              url: h.url,
+              score: fuzzyScore,
+            };
+          })
+          .filter((r: SearchResult) => r.score > 50); // 閾値を50に上げる
 
-      const tabResults: SearchResult[] = tabs
-        .filter((tab: any) => tab.tabId !== activeTabId)
-        .map((tab: any) => {
-          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [tab.title, tab.url || '', normalizeUrl(tab.url || '')]).score;
-          const frecencyScore = calculateFrecencyScore(frecencyData[tab.id]);
-          return {
-            id: tab.id,
-            type: 'tab' as ResultType,
-            title: tab.title,
-            subtitle: tab.url,
-            url: tab.url,
-            favicon: tab.favicon,
-            score: fuzzyScore + frecencyScore,
-            tabId: tab.tabId,
-            windowId: tab.windowId,
-          };
-        })
-        .filter((r: SearchResult) => r.score > 0.3);
+        const bookmarkResults: SearchResult[] = bookmarks
+          .map((b: any) => {
+            const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [b.title, b.url || '', normalizeUrl(b.url || '')]).score;
+            // 高品質な一致（スコア200以上）の場合のみボーナスを付与
+            const bonus = fuzzyScore >= 200 ? 2 : 0;
+            return {
+              id: b.id,
+              type: 'bookmark' as ResultType,
+              title: b.title,
+              subtitle: b.url,
+              url: b.url,
+              score: fuzzyScore + bonus,
+            };
+          })
+          .filter((r: SearchResult) => r.score > 50); // 閾値を50に上げる
 
-      const historyResults: SearchResult[] = history
-        .map((h: any) => {
-          const urlNormalized = normalizeUrl(h.url || '');
-          // タイトルが空の場合はURLのドメイン部分を代替タイトルとして使用
-          const effectiveTitle = h.title || urlNormalized.split('/')[0];
-          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [effectiveTitle, h.url || '', urlNormalized]).score;
-          return {
-            id: h.id,
-            type: 'history' as ResultType,
-            title: effectiveTitle,
-            subtitle: h.url,
-            url: h.url,
-            score: fuzzyScore,
-          };
-        })
-        .filter((r: SearchResult) => r.score > 0);
+        const folderResults: SearchResult[] = folders
+          .map((f: { id: string; title: string; depth: number }) => {
+            const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [f.title]).score;
+            return {
+              id: `folder-${f.id}`,
+              type: 'bookmark-folder' as ResultType,
+              title: f.title,
+              subtitle: 'Bookmark Folder',
+              folderId: f.id,
+              score: fuzzyScore * 0.8,
+              depth: f.depth,
+            };
+          })
+          .filter((r: SearchResult) => r.score > 50); // 閾値を50に上げる
 
-      const bookmarkResults: SearchResult[] = bookmarks
-        .map((b: any) => {
-          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [b.title, b.url || '', normalizeUrl(b.url || '')]).score;
-          return {
-            id: b.id,
-            type: 'bookmark' as ResultType,
-            title: b.title,
-            subtitle: b.url,
-            url: b.url,
-            score: fuzzyScore,
-          };
-        })
-        .filter((r: SearchResult) => r.score > 0.3);
+        // Google検索候補を上位に配置するため高いスコアを設定
+        const searchResults: SearchResult[] = suggestions.map((suggestion: string, index: number) => ({
+          id: `google-search-${index}`,
+          type: 'search' as ResultType,
+          title: suggestion,
+          subtitle: `https://www.google.com/search?q=${encodeURIComponent(suggestion)}`,
+          url: `https://www.google.com/search?q=${encodeURIComponent(suggestion)}`,
+          score: 1.5 - (index * 0.1), // ブックマークの次に高い優先順位
+        }));
 
-      const folderResults: SearchResult[] = folders
-        .map((f: { id: string; title: string; depth: number }) => {
-          const fuzzyScore = fuzzyMatchMultiple(trimmedQuery, [f.title]).score;
-          return {
-            id: `folder-${f.id}`,
-            type: 'bookmark-folder' as ResultType,
-            title: f.title,
-            subtitle: 'Bookmark Folder',
-            folderId: f.id,
-            score: fuzzyScore * 0.8,
-            depth: f.depth,
-          };
-        })
-        .filter((r: SearchResult) => r.score > 0.3);
-
-      allResults = [...tabResults, ...historyResults, ...bookmarkResults, ...folderResults].sort(
-        (a, b) => b.score - a.score
-      );
-
-      // Google検索候補を最下部に追加
-      const searchResults: SearchResult[] = suggestions.map((suggestion: string, index: number) => ({
-        id: `google-search-${index}`,
-        type: 'search' as ResultType,
-        title: suggestion,
-        subtitle: `https://www.google.com/search?q=${encodeURIComponent(suggestion)}`,
-        url: `https://www.google.com/search?q=${encodeURIComponent(suggestion)}`,
-        score: -1 - index,
-      }));
-      allResults.push(...searchResults);
+        // すべての結果を統合してスコア順にソート
+        allResults = [...bookmarkResults, ...searchResults, ...historyResults, ...folderResults].sort(
+          (a, b) => b.score - a.score
+        );
+      }
     }
 
     const finalResults = allResults.slice(0, 11);
@@ -619,6 +616,13 @@ function App() {
           if (result.url) {
             await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
             await recordAction('searchGoogle');
+          }
+          break;
+
+        case 'url':
+          if (result.url) {
+            await browser.runtime.sendMessage({ type: 'NEW_TAB', url: result.url });
+            await recordAction('urlNavigation');
           }
           break;
 
@@ -854,6 +858,8 @@ function App() {
         return <RotateCcw size={iconSize} strokeWidth={iconStrokeWidth} />;
       case 'bookmark-folder':
         return <Folder size={iconSize} strokeWidth={iconStrokeWidth} />;
+      case 'url':
+        return <ExternalLink size={iconSize} strokeWidth={iconStrokeWidth} />;
     }
   };
 
@@ -873,6 +879,8 @@ function App() {
         return 'Restore Session';
       case 'bookmark-folder':
         return '';
+      case 'url':
+        return 'Navigate to URL';
     }
   };
 

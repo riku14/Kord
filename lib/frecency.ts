@@ -45,7 +45,7 @@ async function cleanupOldRecords(data: FrecencyData): Promise<FrecencyData> {
  */
 async function shouldCleanup(): Promise<boolean> {
   try {
-    const result = await chrome.storage.local.get(CLEANUP_TIMESTAMP_KEY);
+    const result = await browser.storage.local.get(CLEANUP_TIMESTAMP_KEY);
     const lastCleanup = result[CLEANUP_TIMESTAMP_KEY] || 0;
     return Date.now() - lastCleanup > CLEANUP_INTERVAL_MS;
   } catch {
@@ -58,7 +58,7 @@ async function shouldCleanup(): Promise<boolean> {
  */
 async function updateCleanupTimestamp(): Promise<void> {
   try {
-    await chrome.storage.local.set({ [CLEANUP_TIMESTAMP_KEY]: Date.now() });
+    await browser.storage.local.set({ [CLEANUP_TIMESTAMP_KEY]: Date.now() });
   } catch {
     // 無視
   }
@@ -89,7 +89,7 @@ export async function recordUsage(id: string): Promise<void> {
       await updateCleanupTimestamp();
     }
 
-    await chrome.storage.local.set({ [STORAGE_KEY]: data });
+    await browser.storage.local.set({ [STORAGE_KEY]: data });
   } catch {
     // 無視
   }
@@ -100,10 +100,10 @@ export async function recordUsage(id: string): Promise<void> {
  */
 export async function getFrecencyData(): Promise<FrecencyData> {
   try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    return result[STORAGE_KEY] || {};
+    const result = await browser.storage.local.get(STORAGE_KEY);
+    return result[STORAGE_KEY] || {} as FrecencyData;
   } catch {
-    return {};
+    return {} as FrecencyData;
   }
 }
 

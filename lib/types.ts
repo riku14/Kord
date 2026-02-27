@@ -1,4 +1,4 @@
-export type ResultType = 'tab' | 'bookmark' | 'history' | 'command' | 'search' | 'session' | 'bookmark-folder';
+export type ResultType = 'tab' | 'bookmark' | 'history' | 'command' | 'search' | 'session' | 'bookmark-folder' | 'url';
 
 export interface SearchResult {
   id: string;
