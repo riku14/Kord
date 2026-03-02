@@ -9,33 +9,33 @@ const screens = [
   {
     file: '01_search_empty.png',
     annotations: [
-      { text: 'タブ・履歴・ブックマーク<br>すべてを瞬時に検索', pos: 'top-left' }
+      { text: 'Tabs, History & Bookmarks<br>Search Everything Instantly', pos: 'top-left' }
     ]
   },
   {
     file: '02_search_results.png',
     annotations: [
-      { text: 'Fuzzy検索で<br>曖昧なワードでも見つかる✨', pos: 'bottom-left' },
-      { text: 'Enterキーで<br>即座にアクセス', pos: 'top-right' }
+      { text: 'Fuzzy Search<br>Find with Vague Keywords✨', pos: 'bottom-left' },
+      { text: 'Press Enter<br>to Access Instantly', pos: 'top-right' }
     ]
   },
   {
     file: '03_command_mode.png',
     annotations: [
-      { text: 'Tabキーで<br>コマンドモードと検索モード切り替え', pos: 'top-left' },
-      { text: 'キーボードだけで<br>ブラウザ操作を完結⌨️', pos: 'bottom-right' }
+      { text: 'Press Tab<br>to Switch Between Command & Search Mode', pos: 'top-left' },
+      { text: 'Full Browser Control<br>with Keyboard Only⌨️', pos: 'bottom-right' }
     ]
   },
   {
     file: '04_command_search.png',
     annotations: [
-      { text: 'よく使うアクションに<br>素早くアクセス🚀', pos: 'bottom-left' },
+      { text: 'Quick Access<br>to Frequently Used Actions🚀', pos: 'bottom-left' },
     ]
   },
   {
     file: '05_popup.png',
     annotations: [
-      { text: 'ショートカットキーを<br>いつでも確認', pos: 'top-right' }
+      { text: 'Check Shortcut Keys<br>Anytime', pos: 'top-right' }
     ]
   }
 ];
@@ -73,7 +73,7 @@ function getAnnotationsHtml(annotations) {
   let divHtml = '';
 
   annotations.forEach((ann, i) => {
-    const angle = Math.floor(Math.random() * 5) - 2; // -2 to +2 degrees
+    const angle = Math.floor(Math.random() * 5) - 2; // Random rotation: -2 to +2 degrees
     const posStyle = getPositionStyle(ann.pos);
     divHtml += `<div class="annotation" style="${posStyle} transform: rotate(${angle}deg);">${ann.text}</div>`;
   });
@@ -85,12 +85,12 @@ function getPageHtml(imgBase64, annotations) {
   return `
     <html>
     <head>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
     <style>
-      body { 
-        margin: 0; padding: 0; 
-        width: 1280px; height: 800px; 
-        font-family: 'Zen Kurenaido', sans-serif; 
+      body {
+        margin: 0; padding: 0;
+        width: 1280px; height: 800px;
+        font-family: 'Inter', sans-serif;
         overflow: hidden; 
         ${getBackground()}
       }
@@ -140,7 +140,7 @@ function getPageHtml(imgBase64, annotations) {
     `;
 }
 
-// Icon generation (128x128 store icon and 440x280 marquee)
+// Icon generation: 128x128 store icon and 440x280 marquee promo image
 function getIconHtml(imgBase64, width, height) {
   const isIcon = width === 128;
   return `
@@ -172,11 +172,13 @@ function getIconHtml(imgBase64, width, height) {
 
 (async () => {
   const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   });
   const page = await browser.newPage();
 
-  // Generate Screenshots
+  // Generate store screenshots
   for (const screen of screens) {
     console.log(`Generating ${screen.file}...`);
     const imgPath = path.join(srcDir, screen.file);
@@ -190,14 +192,14 @@ function getIconHtml(imgBase64, width, height) {
     await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
     await page.setContent(html, { waitUntil: 'load' });
 
-    // Wait for font to load
+    // Wait for web fonts to finish loading
     await page.evaluateHandle('document.fonts.ready');
     await new Promise(r => setTimeout(r, 2000));
 
     await page.screenshot({ path: path.join(outDir, screen.file) });
   }
 
-  // Generate Icon 128x128
+  // Generate store icon (128x128)
   const iconOrigPath = '../assets/icon.png';
   if (fs.existsSync(iconOrigPath)) {
     console.log('Generating Store Icon 128x128...');
